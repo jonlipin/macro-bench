@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0
+
+- Save to a macro slot asks first when something is already there. Updating the macro the bench came from asks "Update Bolt in macro slot 2?", and a name that another macro already has asks "Macro slot 1 already holds Invite. Saving as Invite overwrites it." Either way it shows the first line of what is about to go, so you can see what you would be losing. A slot that is free is written without a word.
+- /macrobench confirm stops it asking, and starts it again.
+
 ## 1.5.2
 
 - Paste a macro and Macro text were drawn on top of each other, so the header read "PasVteamnaacrto". The new button was hung off the same edge as the one already there; they hang off each other now, right to left: Tutorial, Paste a macro, Macro text, Check.

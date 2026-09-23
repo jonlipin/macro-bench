@@ -2412,7 +2412,71 @@ end
 -- ------------------------------------------------------------------
 -- Saving
 -- ------------------------------------------------------------------
-function UI:SaveToSlot()
+-- Asking before something is replaced. The client's own dialog when it has one, and the chat line
+-- with a second click behind it when it has not.
+local CONFIRM = "MACROBENCH_CONFIRM"
+if type(StaticPopupDialogs) == "table" then
+	StaticPopupDialogs[CONFIRM] = {
+		text = "%s",
+		button1 = YES or "Yes",
+		button2 = CANCEL or "Cancel",
+		OnAccept = function()
+			local action = UI.confirmAction
+			UI.confirmAction = nil
+			if action then action() end
+		end,
+		OnCancel = function() UI.confirmAction = nil end,
+		timeout = 0,
+		whileDead = true,
+		hideOnEscape = true,
+		preferredIndex = 3,
+	}
+end
+
+function UI:Confirm(text, acceptLabel, onAccept)
+	self.confirmAction = onAccept
+	if type(StaticPopupDialogs) == "table" and StaticPopupDialogs[CONFIRM] and StaticPopup_Show then
+		local ok, dialog = pcall(StaticPopup_Show, CONFIRM, text)
+		if ok and dialog then
+			if acceptLabel and dialog.button1 then
+				dialog.button1:SetText(acceptLabel)
+				if StaticPopup_Resize then pcall(StaticPopup_Resize, dialog, CONFIRM) end
+			end
+			return
+		end
+	end
+	ns.Print((text:gsub("|n", " "):gsub("\n", " ")) .. " Click the button again to go ahead.")
+	self.confirmFallback = onAccept
+end
+
+function UI:SaveToSlot(confirmed)
+	local name = G.Trim(ns.bench.name or "")
+	-- Which slot this would land in: the one it came from, or one already using that name.
+	local target = ns.bench.slot or (name ~= "" and ns.FindMacroSlot(name) or nil)
+	local existing = target and ns.MacroAt(target)
+	if existing and not confirmed and ns.db.confirmOverwrite ~= false and ns.BenchLength() > 0 then
+		if self.confirmFallback then
+			-- No dialog on this client: the second click is the answer.
+			local action = self.confirmFallback
+			self.confirmFallback = nil
+			action()
+			return
+		end
+		local first = (existing.body or ""):match("^[^\n]*") or ""
+		if #first > 60 then first = first:sub(1, 59) .. "…" end
+		local updating = ns.bench.slot == target and strlower(existing.name) == strlower(name)
+		local text
+		if updating then
+			text = format("Update |cffffd100%s|r in macro slot %d?|n|nWhat is on the bench replaces what is in that slot now:|n|cff9d9d9d%s|r",
+				existing.name, target, first)
+		else
+			text = format("Macro slot %d already holds |cffffd100%s|r:|n|cff9d9d9d%s|r|n|nSaving as |cffffd100%s|r overwrites it. Change the name at the bottom to keep both.",
+				target, existing.name, first, name ~= "" and name or "?")
+		end
+		self:Confirm(text, updating and "Update" or "Overwrite", function() UI:SaveToSlot(true) end)
+		return
+	end
+	self.confirmFallback = nil
 	local ok, err = ns.WriteMacro({ name = ns.bench.name, replace = ns.bench.slot })
 	if ok == true then
 		ns.bench.dirty = false

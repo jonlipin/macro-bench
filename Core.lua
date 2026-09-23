@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.5.2"
+ns.VERSION = "1.6.0"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -460,6 +460,16 @@ function ns.MacroList()
 	return out
 end
 
+-- What is in one slot right now, for showing somebody what they are about to replace.
+function ns.MacroAt(index)
+	if not index then return nil end
+	local ok, name, icon, body = pcall(GetMacroInfo, index)
+	if ok and Clean(name) then
+		return { index = index, name = Clean(name), icon = Clean(icon), body = Clean(body) or "" }
+	end
+	return nil
+end
+
 function ns.FindMacroSlot(name)
 	if not name or name == "" then return nil end
 	for _, m in ipairs(ns.MacroList()) do
@@ -743,6 +753,7 @@ local function Usage()
 	Print("  |cffffd100/macrobench load <name>|r put one of your game macros on the bench")
 	Print("  |cffffd100/macrobench tutorial|r a macro built a step at a time, with your own spells")
 	Print("  |cffffd100/macrobench scan|r check every macro you have and list the broken ones")
+	Print("  |cffffd100/macrobench confirm|r ask, or stop asking, before a macro slot is replaced")
 	Print("  |cffffd100/macrobench minimap|r show or hide the minimap button")
 	Print("  |cffffd100/macrobench debug|r what this client allowed")
 end
@@ -776,6 +787,9 @@ local function Command(input)
 		ns.Tutorial:Toggle()
 	elseif cmd == "scan" then
 		ns.Validate.ScanAll()
+	elseif cmd == "confirm" then
+		ns.db.confirmOverwrite = not (ns.db.confirmOverwrite ~= false)
+		Print("Ask before a macro slot is replaced: " .. ns.YesNo(ns.db.confirmOverwrite ~= false))
 	elseif cmd == "minimap" then
 		ns.db.minimap = not ns.db.minimap
 		ns.UI:UpdateMinimapButton()

@@ -87,5 +87,6 @@ None of this is Macro Bench being careful; it is the game.
 | `/macrobench check` | check what is on the bench and print the findings |
 | `/macrobench load <name>` | put one of your game macros on the bench |
 | `/macrobench scan` | check every macro you have and list the broken ones |
+| `/macrobench confirm` | ask, or stop asking, before a macro slot is replaced |
 | `/macrobench minimap` | show or hide the minimap button |
 | `/macrobench debug` | what this client allowed |

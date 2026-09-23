@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- A part that cannot be used yet is dimmed. Before anything is on the bench that is every condition block, because a condition needs a line to belong to; once there is a line, any block the line does not read conditions on stays dim too. Clicking a dim one says why rather than doing nothing, and its tooltip says it before you click.
+- The part you are working on has more room: the panel is 270 tall rather than 212, which is most of the state block without scrolling.
+
 ## 1.6.2
 
 - Not a dash of any kind left in the addon: the window, the tutorials, the tooltips, this file and the README. Each one was rewritten to what the sentence wanted, a colon or brackets or a full stop, rather than swapped for a hyphen. The three-way buttons say "-" for a condition that is not asked.

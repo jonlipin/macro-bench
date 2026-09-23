@@ -591,7 +591,11 @@ function UI:EndDrag()
 	end
 	if payload.partProto then
 		local target = overChain and (self:LineUnderCursor() or #ns.bench.blocks) or nil
-		if target and target > 0 then self:AddPart(target, 1, payload.partProto) end
+		if target and target > 0 then
+			self:AddPart(target, 1, payload.partProto)
+		elseif overChain then
+			ns.Print("A condition needs a line to belong to. Put an action on the bench first.")
+		end
 		return
 	end
 	if not overChain then
@@ -839,6 +843,26 @@ local function ProtoLook(proto)
 	return "the action", label, look, ns.SafeIcon(proto.icon)
 end
 
+-- Can this part be used as things stand? An action can always go on: it is what a macro is made of.
+-- A condition has to have a line to belong to, and that line has to be one the game reads conditions
+-- on, so before anything is on the bench they are all dimmed.
+local function ProtoUsable(proto)
+	if not proto or not proto.part then return true end
+	local blocks = ns.bench.blocks
+	if #blocks == 0 then return false, "There is nothing for it to belong to yet. Put an action on the bench first." end
+	local index = (UI.sel and UI.sel.block) or #blocks
+	local b = blocks[index] or blocks[#blocks]
+	if not b then return false, "There is nothing for it to belong to yet." end
+	if proto.part == "otherwise" or proto.part == "or" then
+		if not b.clauses then return false, format("Line %d has nothing to try instead: it is not a line the game reads conditions on.", index) end
+		return true
+	end
+	if not G.BlockTakesCond(b) then
+		return false, format("Line %d does not read conditions, so this would do nothing there.", index)
+	end
+	return true
+end
+
 local function CreatePaletteTile(parent)
 	local t = CreatePartFrame(parent)
 	t:RegisterForDrag("LeftButton")
@@ -856,12 +880,13 @@ local function CreatePaletteTile(parent)
 	t:SetScript("OnClick", function(self)
 		local proto = self.proto
 		if not proto then return end
+		local usable, why = ProtoUsable(proto)
+		if not usable then
+			ns.Print(why or "That cannot go on the bench yet.")
+			return
+		end
 		if proto.part then
 			local at = (UI.sel and UI.sel.block) or #ns.bench.blocks
-			if at < 1 then
-				ns.Print("Put an action on the bench first, then this says when it runs.")
-				return
-			end
 			UI:AddPart(at, (UI.sel and UI.sel.clause) or 1, proto, UI.sel and UI.sel.cond)
 		else
 			UI:InsertBlocks({ G.NewBlock(proto.cmd, proto.arg or "", proto.cond) }, #ns.bench.blocks + 1)
@@ -878,9 +903,11 @@ local function CreatePaletteTile(parent)
 		elseif proto.cmd == "#" then shown = "# a note"
 		elseif proto.cmd:sub(1, 1) == "#" then shown = proto.cmd
 		else shown = "/" .. proto.cmd .. ((proto.arg or "") ~= "" and (" " .. proto.arg) or "") end
+		local usable, why = ProtoUsable(proto)
 		TextTooltip(self, label, "|cff7f7f7f" .. shown .. "|r", proto.tip,
-			proto.part and "Drag it onto a line, or click to add it to the line you are working on."
-			or "Drag it onto the chain, or click to put it at the end.")
+			usable and (proto.part and "Drag it onto a line, or click to add it to the line you are working on."
+				or "Drag it onto the chain, or click to put it at the end.")
+				or ("|cffffaa33" .. (why or "") .. "|r"))
 	end)
 	t:SetScript("OnLeave", HideTooltip)
 	return t
@@ -928,9 +955,22 @@ function UI:LayoutParts()
 		y = y + PART_H + 14
 	end
 	for i = used + 1, #palette do palette[i]:Hide() end
+	UI:SyncPartsUsable()
 	for i = usedHeads + 1, #palHeads do palHeads[i]:Hide() end
 	partsContent:SetWidth(max(10, width - 6))
 	partsContent:SetHeight(max(y, partsScroll:GetHeight()))
+end
+
+-- Which parts can be used as things stand. Only the look changes, so this can run on every keystroke
+-- without the page being laid out again.
+function UI:SyncPartsUsable()
+	for _, tile in ipairs(palette or {}) do
+		if tile:IsShown() then
+			local usable = ProtoUsable(tile.proto)
+			tile:SetAlpha(usable and 1 or 0.35)
+			tile.usable = usable
+		end
+	end
 end
 
 function UI:RemovePart(item)
@@ -2365,6 +2405,7 @@ function UI:Refresh(fromText)
 	if fromText then self:RefreshTextCount() else self:RefreshText() end
 	self:RefreshFooter()
 	if book.tab == "MINE" then self:RefreshBook() end
+	self:SyncPartsUsable()
 	if ns.Tutorial then ns.Tutorial:Check() end
 	chainPane.note:SetText(format("%d line%s", #ns.bench.blocks, #ns.bench.blocks == 1 and "" or "s"))
 end
@@ -2743,7 +2784,7 @@ end
 
 local function BuildChain()
 	-- ---- The chain ------------------------------------------------
-	chainPane = Pane(body, "The macro", BENCH_L, nil, 2, 398)
+	chainPane = Pane(body, "The macro", BENCH_L, nil, 2, 340)
 
 	-- The macro text and the check live in windows of their own, opened from here.
 	local checkButton = MakeButton(chainPane, "Check", 70,
@@ -2811,7 +2852,7 @@ local function BuildPart()
 	-- The header is three bands that must not run into each other: the buttons and the title on the
 	-- first, the hint on the second, the editor below both. The editor starts under the deepest of
 	-- them, which is the icon.
-	partPane = Pane(body, "The part you are working on", BENCH_L, nil, 404, 212)
+	partPane = Pane(body, "The part you are working on", BENCH_L, nil, 346, 270)
 	partIcon = TrimIcon(partPane:CreateTexture(nil, "ARTWORK"))
 	partIcon:SetSize(24, 24)
 	partIcon:SetPoint("TOPLEFT", 10, -28)

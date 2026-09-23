@@ -22,7 +22,7 @@ local FRAME_W, FRAME_H = 1360, 764
 local ICON = "Interface\\Icons\\INV_Scroll_03"
 local BOOK_W = 412
 local PART_H, PART_GAP, LINE_GAP = 42, 8, 12
-local BOOK_ROW, HEAD_ROW = 40, 22
+local BOOK_ROW, HEAD_ROW = 46, 22
 -- Where the bench starts: to the right of the tab strip and the page beside it.
 local BENCH_L = BOOK_W + 10
 
@@ -2019,25 +2019,34 @@ local function CreateBookRow(parent)
 	row.bg = Plate(row, 0.08, 0.08, 0.08, 0.35)
 	row.bg:ClearAllPoints()
 	row.bg:SetPoint("TOPLEFT", 2, -1)
-	row.bg:SetPoint("BOTTOMRIGHT", -2, 1)
+	row.bg:SetPoint("BOTTOMRIGHT", -2, 3)
+	-- A rule of its own along the bottom, rather than leaving the gap between two backgrounds to
+	-- read as one: everything above the rule belongs to that macro and nothing else does.
+	row.rule = row:CreateTexture(nil, "ARTWORK")
+	row.rule:SetPoint("BOTTOMLEFT", 6, 1)
+	row.rule:SetPoint("BOTTOMRIGHT", -6, 1)
+	row.rule:SetHeight(1)
+	row.rule:SetColorTexture(0.32, 0.29, 0.22, 0.4)
 	row:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 	row.icon = TrimIcon(row:CreateTexture(nil, "ARTWORK"))
 	row.icon:SetSize(26, 26)
-	row.icon:SetPoint("LEFT", 6, 0)
+	row.icon:SetPoint("TOPLEFT", 6, -6)
 	row.name = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	row.name:SetPoint("TOPLEFT", 40, -3)
-	row.name:SetPoint("RIGHT", -24, 0)
+	row.name:SetPoint("TOPLEFT", 40, -6)
+	row.name:SetPoint("RIGHT", -82, 0)
 	row.name:SetJustifyH("LEFT")
 	row.name:SetMaxLines(1)
 	row.why = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	row.why:SetPoint("TOPLEFT", 40, -19)
-	row.why:SetPoint("RIGHT", -24, 0)
+	row.why:SetPoint("TOPLEFT", 40, -24)
+	row.why:SetPoint("RIGHT", -10, 0)
 	row.why:SetJustifyH("LEFT")
 	row.why:SetMaxLines(1)
+	-- On the name's line, where it belongs to that macro. At the bottom of the row it lined up with
+	-- the next name down and read as that one's.
 	row.tag = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	row.tag:SetPoint("BOTTOMRIGHT", -6, 3)
+	row.tag:SetPoint("TOPRIGHT", -8, -7)
 	row.heading = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	row.heading:SetPoint("BOTTOMLEFT", 8, 4)
+	row.heading:SetPoint("BOTTOMLEFT", 8, 3)
 	row.heading:SetTextColor(1, 0.82, 0)
 	row.del = CreateFrame("Button", nil, row)
 	row.del:SetSize(16, 16)
@@ -2124,7 +2133,7 @@ end
 
 local function BookRowHeight(entry)
 	if entry.heading then return HEAD_ROW end
-	if entry.note then return 40 end
+	if entry.note then return 42 end
 	return BOOK_ROW
 end
 
@@ -2161,8 +2170,8 @@ local function UpdateBookRow(row, entry)
 		return
 	end
 	row.why:ClearAllPoints()
-	row.why:SetPoint("TOPLEFT", 40, -19)
-	row.why:SetPoint("RIGHT", -24, 0)
+	row.why:SetPoint("TOPLEFT", 40, -24)
+	row.why:SetPoint("RIGHT", -10, 0)
 	row.why:SetMaxLines(1)
 	if entry.proto then
 		local proto = entry.proto

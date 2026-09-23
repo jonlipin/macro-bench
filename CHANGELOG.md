@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.7.1
+## 1.7.2
 
+- A macro in the list did not read as one thing. What the slot is, "slot 1" or "yours", sat at the bottom right of its row, level with the next macro name down, so it looked like that one's. It is on the name's line now, the icon lines up with the name rather than floating in the middle of the row, each row has a rule of its own along the bottom instead of leaving a gap to do that work, and rows are six pixels taller.
+
+## 1.7.1
 - The minimap button sat inside the ring the others are on. Its reach was a fixed 80 from the centre, which is right only for a minimap of the size the game ships; measured from the minimap own width plus six, as Aura Ledger measures it, the two now sit on one ring whatever size the minimap has been made. The icon moved to where the tracking border window is rather than the middle of the button, and it has the same dark backing behind it that the others have.
 - Dragging it works on a client without math.atan2, and the angle is kept between 0 and 360.
 

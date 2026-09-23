@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.7.2
+## 1.7.3
 
+- A macro with a long body drew that body below its own row, over the next macro. Clipping a line of text to one line is not enough on its own: a string anchored on both sides wraps inside its own region, the region stays as tall as the wrapped text, and a font string sits in the middle of its region unless it is told otherwise, so the one line that survived dropped to the middle of three. Every single-line string in the window now goes through one helper that clips it, holds it to the top of its region and stops it wrapping at all.
+
+## 1.7.2
 - A macro in the list did not read as one thing. What the slot is, "slot 1" or "yours", sat at the bottom right of its row, level with the next macro name down, so it looked like that one's. It is on the name's line now, the icon lines up with the name rather than floating in the middle of the row, each row has a rule of its own along the bottom instead of leaving a gap to do that work, and rows are six pixels taller.
 
 ## 1.7.1

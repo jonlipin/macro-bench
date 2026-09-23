@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4
+
+- The ? is built the way Aura Ledger builds its own, which comes out visible on this client: a plain button wearing the client red button art, taking its strata and its level from the close button beside it rather than from the window. Measuring against the window was the mistake — the close button is the thing on that border that is certainly drawn, so one above it is certainly drawn too. It is taken again on every show and every raise, and /macrobench debug says which art it found and where it ended up.
+
 ## 1.4.3
 
 - The ? was there to be hovered but not to be seen, and so was the check line along the bottom whenever the window had been clicked. Both sit on the window border rather than inside it, and the window re-levels itself every time it is shown or brought to the front, which left them stranded under the border art. They are lifted again on every show and every click now, from one place that knows about all of them.

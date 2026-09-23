@@ -444,8 +444,15 @@ end
 -- not to be seen.
 function UI:LiftCorners()
 	if not frame then return end
-	local level = (frame:GetFrameLevel() or 1) + 20
+	-- Measured against the close button, not the window: the close button is the thing on this
+	-- border that is certainly drawn, so one above it is certainly drawn too. Taken again on every
+	-- show and every raise, because the window re-levels itself and its close button with it.
+	local above = frame.CloseButton or frame
+	local strata = above.GetFrameStrata and above:GetFrameStrata() or frame:GetFrameStrata()
+	local level = ((above.GetFrameLevel and above:GetFrameLevel()) or frame:GetFrameLevel() or 1) + 1
+	ns.report["corner buttons"] = (strata or "?") .. " level " .. level
 	for _, f in ipairs(self.corners or {}) do
+		if f.SetFrameStrata and strata then f:SetFrameStrata(strata) end
 		if f.SetFrameLevel then f:SetFrameLevel(level) end
 	end
 end
@@ -2413,17 +2420,65 @@ local function BuildFrame()
 	end
 
 	-- Up beside the close button, where a question mark belongs.
-	local help = MakeButton(frame, "?", 26, "Tutorials: a macro built a step at a time, on this bench, with your own spells.")
-	help:SetHeight(24)
+	-- Built the way Aura Ledger builds its own, which is known to come out visible on this client:
+	-- a plain button that takes its strata and its level from the close button beside it rather than
+	-- from the window, and that wears the client's own red button art, with a bordered box and then
+	-- a plain fill as fallbacks. A templated button parented to the window went behind the border.
+	local help = CreateFrame("Button", nil, frame)
+	help:SetSize(24, 22)
 	if frame.CloseButton then
-		help:SetPoint("RIGHT", frame.CloseButton, "LEFT", -1, 0)
+		help:SetPoint("RIGHT", frame.CloseButton, "LEFT", 0, 0)
 	else
-		help:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -34, -6)
+		help:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -2)
 	end
-	-- The frame's border is a frame of its own on this client, drawn above anything parented to the
-	-- window at the usual level: a button in the corner goes behind the corner art and is simply not
-	-- there. Lifting it above the border is what makes it visible.
+	local plate = "none"
+	for _, atlas in ipairs({ "RedButton", "UI-RedButton" }) do
+		if HasAtlas(atlas) and help.SetNormalAtlas then
+			help:SetNormalAtlas(atlas)
+			if HasAtlas(atlas .. "-Pressed") and help.SetPushedAtlas then help:SetPushedAtlas(atlas .. "-Pressed") end
+			plate = atlas
+			break
+		end
+	end
+	if plate == "none" then
+		local okb, box = pcall(CreateFrame, "Frame", nil, help, "BackdropTemplate")
+		if okb and box and box.SetBackdrop then
+			box:SetPoint("TOPLEFT", 1, -1)
+			box:SetPoint("BOTTOMRIGHT", -1, 1)
+			box:SetBackdrop({
+				bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+				tile = true, tileSize = 8, edgeSize = 8,
+				insets = { left = 2, right = 2, top = 2, bottom = 2 },
+			})
+			box:SetBackdropColor(0.35, 0.05, 0.05, 1)
+			box:SetBackdropBorderColor(1, 0.82, 0)
+			plate = "bordered box"
+		else
+			local fill = help:CreateTexture(nil, "BACKGROUND")
+			fill:SetPoint("TOPLEFT", 1, -1)
+			fill:SetPoint("BOTTOMRIGHT", -1, 1)
+			fill:SetColorTexture(0.35, 0.05, 0.05, 1)
+			plate = "plain fill"
+		end
+	end
+	ns.report["help button plate"] = plate
+	local qmark = help:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	qmark:SetPoint("CENTER")
+	qmark:SetText("?")
+	qmark:SetTextColor(1, 0.92, 0.4)
+	qmark:SetShadowColor(0, 0, 0, 1)
+	qmark:SetShadowOffset(1, -1)
+	if HasAtlas("RedButton-Highlight") and help.SetHighlightAtlas then
+		help:SetHighlightAtlas("RedButton-Highlight")
+	else
+		help:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+	end
 	help:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
+	help:SetScript("OnEnter", function(self)
+		TextTooltip(self, "Tutorials", "Five macros built a step at a time, on this bench, with your own spells. It can be left at any point, and this button brings it back.")
+	end)
+	help:SetScript("OnLeave", HideTooltip)
 	UI.corners[#UI.corners + 1] = help
 	UI.focus.help = help
 

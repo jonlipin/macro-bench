@@ -1714,7 +1714,7 @@ local function CreateEditors(host, scroll)
 	arg.match = match
 
 	local note = arg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	note:SetPoint("TOPLEFT", match, "BOTTOMLEFT", 0, -6)
+	note:SetPoint("TOPLEFT", match, "BOTTOMLEFT", 0, -4)
 	note:SetPoint("RIGHT", arg, "RIGHT", -12, 0)
 	note:SetJustifyH("LEFT")
 	arg.note = note
@@ -1725,7 +1725,7 @@ local function CreateEditors(host, scroll)
 	for i = 1, 6 do
 		local row = CreateFrame("Button", nil, arg)
 		row:SetSize(360, 18)
-		row:SetPoint("TOPLEFT", argBox, "BOTTOMLEFT", 0, -28 - (i - 1) * 18)
+		row:SetPoint("TOPLEFT", argBox, "BOTTOMLEFT", 0, -76 - (i - 1) * 18)
 		row.bg = Plate(row, 0.12, 0.12, 0.12, 0.7)
 		row:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 		row.icon = TrimIcon(row:CreateTexture(nil, "ARTWORK"))
@@ -1742,7 +1742,7 @@ local function CreateEditors(host, scroll)
 	end
 
 	local argResolve = arg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	argResolve:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -6)
+	argResolve:SetPoint("TOPRIGHT", argBox, "BOTTOMRIGHT", 0, -8)
 	arg.box, arg.resolve = argBox, argResolve
 
 	-- The spell or item a clause is naming, with the sequence's reset and its later steps stripped.

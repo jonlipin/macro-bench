@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.7.3"
+ns.VERSION = "1.7.4"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -160,15 +160,35 @@ function ns.SpellBookList()
 		seen[strlower(name)] = true
 		out[#out + 1] = { name = name, icon = Clean(icon), what = "spell" }
 	end
-	if C_SpellBook and C_SpellBook.GetNumSpellBookItems and Enum and Enum.SpellBookSpellBank then
+	-- Which call gives up the name moves about between clients: the info table has it on some, only
+	-- an id on others, and a call of its own elsewhere. All of them are tried for every entry.
+	local book = C_SpellBook
+	if book and book.GetNumSpellBookItems and Enum and Enum.SpellBookSpellBank then
 		for _, bank in ipairs({ Enum.SpellBookSpellBank.Player, Enum.SpellBookSpellBank.Pet }) do
-			local ok, num = pcall(C_SpellBook.GetNumSpellBookItems, bank)
-			num = ok and Clean(num) or 0
+			local ok, num = pcall(book.GetNumSpellBookItems, bank)
+			num = (ok and Clean(num)) or 0
 			for i = 1, num do
-				local okInfo, info = pcall(C_SpellBook.GetSpellBookItemInfo, i, bank)
-				if okInfo and type(info) == "table" then
-					Add(info.name, info.iconID, info.isPassive)
+				local name, icon, passive
+				if book.GetSpellBookItemInfo then
+					local okInfo, info = pcall(book.GetSpellBookItemInfo, i, bank)
+					if okInfo and type(info) == "table" then
+						name, icon, passive = Clean(info.name), Clean(info.iconID), Clean(info.isPassive)
+						if (not name or name == "") and Clean(info.spellID) then
+							local fromId, iconFromId = ns.SpellInfo(Clean(info.spellID))
+							name = name or fromId
+							icon = icon or iconFromId
+						end
+					end
 				end
+				if (not name or name == "") and book.GetSpellBookItemName then
+					local okName, n = pcall(book.GetSpellBookItemName, i, bank)
+					if okName then name = Clean(n) end
+				end
+				if not icon and book.GetSpellBookItemTexture then
+					local okTex, tex = pcall(book.GetSpellBookItemTexture, i, bank)
+					if okTex then icon = Clean(tex) end
+				end
+				Add(name, icon, passive)
 			end
 		end
 	end
@@ -189,6 +209,7 @@ function ns.SpellBookList()
 		end
 	end
 	table.sort(out, function(a, b) return a.name < b.name end)
+	ns.report["spells for finishing a name"] = #out
 	spellCache = out
 	return out
 end
@@ -244,6 +265,7 @@ function ns.BagItemList()
 		end
 	end
 	table.sort(out, function(a, b) return a.name < b.name end)
+	ns.report["items for finishing a name"] = #out
 	itemCache = out
 	return out
 end
@@ -729,6 +751,8 @@ events:SetScript("OnEvent", function(_, event, arg1)
 	elseif event == "PLAYER_LOGIN" then
 		if not ns.db then ns.InitDB() end
 		ns.Grammar.ForgetClientCommands()
+		ns.SpellBookList()
+		ns.BagItemList()
 		ns.UI:Init()
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		FlushQueue()

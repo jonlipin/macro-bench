@@ -1,7 +1,11 @@
 # Changelog
 
-## 1.7.3
+## 1.7.4
 
+- Finishing a name offered nothing. Reading the spellbook leaned on one field of one call, and on a client that keeps the name somewhere else the list came back empty without saying so. Every way the name and the icon can be had is tried for every entry now: the info table, the id in it looked up, and the name call of its own. /macrobench debug says how many spells and items it found, so an empty list can be seen rather than guessed at, and both lists are read at login.
+- The names being offered had been drawn on top of the line that says what the game made of what you typed. Each has its own band under the box now: what it matched, anything to say about it, then the names.
+
+## 1.7.3
 - A macro with a long body drew that body below its own row, over the next macro. Clipping a line of text to one line is not enough on its own: a string anchored on both sides wraps inside its own region, the region stays as tall as the wrapped text, and a font string sits in the middle of its region unless it is told otherwise, so the one line that survived dropped to the middle of three. Every single-line string in the window now goes through one helper that clips it, holds it to the top of its region and stops it wrapping at all.
 
 ## 1.7.2

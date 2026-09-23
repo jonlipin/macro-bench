@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+- Registering LEARNED_SPELL_IN_TAB threw: this client has never heard of it, and an unknown event name is an error rather than a quiet no. The name for a spell being learned moves about between clients, so both are asked for, each on its own, and /macrobench debug reports which ones this client took.
+- A "Paste a macro" button on the macro header opens the text with everything in it selected, ready for ctrl+V. Pasting already built the chain — anything typed or pasted into that box is read straight into blocks — but nothing said so and the window had to be found first.
+
 ## 1.5.0
 
 - A spell or item box finishes what you are typing. Two letters in, the names you actually have start appearing under the box — your spellbook for a cast, your bags and what you are wearing for a use, both for a tooltip line — and clicking one writes the whole name. Tab takes the first. Names that begin with what you typed come first, then names that merely contain it, so "heal" finds Flash Heal and "word" finds Power Word: Shield.

@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.5.0"
+ns.VERSION = "1.5.1"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -696,14 +696,23 @@ end
 -- Events
 -- ------------------------------------------------------------------
 local events = CreateFrame("Frame")
-events:RegisterEvent("ADDON_LOADED")
-events:RegisterEvent("PLAYER_LOGIN")
-events:RegisterEvent("PLAYER_REGEN_ENABLED")
-events:RegisterEvent("UPDATE_MACROS")
-events:RegisterEvent("PLAYER_LOGOUT")
-events:RegisterEvent("SPELLS_CHANGED")
-events:RegisterEvent("LEARNED_SPELL_IN_TAB")
-events:RegisterEvent("BAG_UPDATE_DELAYED")
+-- An event this client has never heard of is an error, not a quiet no, and the names for the same
+-- thing move about between clients: a spell learned is LEARNED_SPELL_IN_SKILL_LINE here and
+-- LEARNED_SPELL_IN_TAB elsewhere. So each one is asked for on its own and what took is reported.
+local function Register(event)
+	local ok = pcall(events.RegisterEvent, events, event)
+	ns.report["event " .. event] = ok and "ok" or "not on this client"
+	return ok
+end
+Register("ADDON_LOADED")
+Register("PLAYER_LOGIN")
+Register("PLAYER_REGEN_ENABLED")
+Register("UPDATE_MACROS")
+Register("PLAYER_LOGOUT")
+Register("SPELLS_CHANGED")
+Register("LEARNED_SPELL_IN_SKILL_LINE")
+Register("LEARNED_SPELL_IN_TAB")
+Register("BAG_UPDATE_DELAYED")
 events:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		ns.InitDB()
@@ -715,7 +724,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		FlushQueue()
 	elseif event == "PLAYER_LOGOUT" then
 		ns.SaveBench()
-	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_TAB" then
+	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_SKILL_LINE" or event == "LEARNED_SPELL_IN_TAB" then
 		ns.ForgetLists("spells")
 	elseif event == "BAG_UPDATE_DELAYED" then
 		ns.ForgetLists("items")

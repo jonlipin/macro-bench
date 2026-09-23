@@ -2693,6 +2693,12 @@ local function BuildChain()
 	textButton:SetHeight(18)
 	textButton:SetPoint("RIGHT", checkButton, "LEFT", -4, 0)
 	textButton:SetScript("OnClick", function() UI:ToggleWindow(textWindow) end)
+	local pasteButton = MakeButton(chainPane, "Paste a macro", 100,
+		"Opens the macro text with everything in it selected, ready for ctrl+V. Whatever you paste is read into the chain: a macro off a website, out of the game's own macro window, or from a friend.")
+	pasteButton:SetHeight(18)
+	pasteButton:SetPoint("RIGHT", checkButton, "LEFT", -4, 0)
+	pasteButton:SetScript("OnClick", function() UI:PasteMacro() end)
+
 	-- The same tutorials as the ? in the title bar, somewhere nothing can draw over them.
 	local tutorialButton = MakeButton(chainPane, "Tutorial", 72,
 		"Five macros built a step at a time, on this bench, with your own spells.")
@@ -2866,7 +2872,7 @@ local function BuildTextAndCheck()
 	textHint:SetPoint("TOPLEFT", 8, -2)
 	textHint:SetPoint("RIGHT", charCount, "LEFT", -8, 0)
 	textHint:SetJustifyH("LEFT")
-	textHint:SetText("Type here and the chain follows. Either side is the macro.")
+	textHint:SetText("Type or paste a macro here and the chain follows. Either side is the macro.")
 
 	textScroll = TryCreateFrame("ScrollFrame", nil, pane, {
 		{ "MacroBenchScrollFrameTemplate" }, { "UIPanelScrollFrameTemplate" },
@@ -2913,6 +2919,15 @@ local function BuildTextAndCheck()
 end
 
 -- Opening one of them puts it beside the bench the first time, and where you left it after that.
+-- Ready for a macro to be pasted in: the text window open, everything in it selected, the keyboard
+-- in the box. Whatever lands there is read into the chain the same way typing is.
+function UI:PasteMacro()
+	if not textWindow:IsShown() then self:ToggleWindow(textWindow) end
+	textBox:SetFocus()
+	textBox:HighlightText()
+	ns.Print("Press |cffffd100ctrl+V|r to paste a macro in. The chain builds itself from whatever arrives.")
+end
+
 function UI:ToggleWindow(w)
 	if not w then return end
 	if w:IsShown() then

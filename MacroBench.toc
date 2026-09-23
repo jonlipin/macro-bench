@@ -2,7 +2,7 @@
 ## Title: Macro Bench
 ## Notes: Build macros from blocks and watch the macro text write itself beside them, either side editable. Checks every line before you save it, and comes with templates for every class.|n|cff00ccff/macrobench|r to open.
 ## Author: Jon
-## Version: 1.7.4
+## Version: 1.7.5
 ## LoadSavedVariablesFirst: 1
 ## SavedVariables: MacroBenchDB
 ## IconTexture: Interface\Icons\INV_Scroll_03

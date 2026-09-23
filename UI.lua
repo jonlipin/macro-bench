@@ -115,7 +115,7 @@ end
 
 local function OneLine(fs)
 	if not fs then return fs end
-	OneLine(fs)
+	fs:SetMaxLines(1)
 	fs:SetJustifyV("TOP")
 	if fs.SetWordWrap then fs:SetWordWrap(false) end
 	return fs

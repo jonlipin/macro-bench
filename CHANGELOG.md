@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.7.4
+## 1.7.5
 
+- The window would not open: "stack overflow". Putting every single-line string through one helper in 1.7.4 rewrote the call inside the helper as well, so it called itself for ever. It sets the line count itself again.
+
+## 1.7.4
 - Finishing a name offered nothing. Reading the spellbook leaned on one field of one call, and on a client that keeps the name somewhere else the list came back empty without saying so. Every way the name and the icon can be had is tried for every entry now: the info table, the id in it looked up, and the name call of its own. /macrobench debug says how many spells and items it found, so an empty list can be seen rather than guessed at, and both lists are read at login.
 - The names being offered had been drawn on top of the line that says what the game made of what you typed. Each has its own band under the box now: what it matched, anything to say about it, then the names.
 

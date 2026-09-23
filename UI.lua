@@ -39,6 +39,7 @@ local parts, plates, links, editors
 local partsScroll, partsContent, palette, palHeads
 local bookTop, classButtons
 UI.focus = {}
+UI.corners = {}
 local partTitle, partIcon, partHint, partEmpty, partButtons
 local textBox, textScroll, charCount
 local nameBox, iconButton, perCharCheck, statusText
@@ -436,6 +437,17 @@ local function CreateBookTab(holder, pane, token, index)
 	end)
 	tab:SetScript("OnLeave", HideTooltip)
 	return tab
+end
+
+-- The window re-levels itself whenever it is shown or clicked, so whatever sits on its border has
+-- to be put back above that art each time. Without this a corner button is there to be hovered but
+-- not to be seen.
+function UI:LiftCorners()
+	if not frame then return end
+	local level = (frame:GetFrameLevel() or 1) + 20
+	for _, f in ipairs(self.corners or {}) do
+		if f.SetFrameLevel then f:SetFrameLevel(level) end
+	end
 end
 
 function UI:SyncTabs()
@@ -2352,7 +2364,10 @@ local function BuildFrame()
 	-- Another addon in the same strata would otherwise interleave with this one: its window over
 	-- our panes, our panes over its window. Toplevel puts whichever was clicked last in front.
 	if frame.SetToplevel then frame:SetToplevel(true) end
-	frame:SetScript("OnMouseDown", function(self) if self.Raise then self:Raise() end end)
+	frame:SetScript("OnMouseDown", function(self)
+		if self.Raise then self:Raise() end
+		UI:LiftCorners()
+	end)
 	frame:RegisterForDrag("LeftButton")
 	frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
 	frame:SetScript("OnDragStop", function(self)
@@ -2365,6 +2380,7 @@ local function BuildFrame()
 	frame:Hide()
 	tinsert(UISpecialFrames, "MacroBenchFrame")
 	frame:HookScript("OnShow", function()
+		UI:LiftCorners()
 		-- Parts measure their own words, and nothing has a real width until the client has laid the
 		-- window out, which happens after this. So the first draw is done again a frame later.
 		if C_Timer and C_Timer.After then C_Timer.After(0, function() UI:Refresh() end) end
@@ -2407,8 +2423,8 @@ local function BuildFrame()
 	-- The frame's border is a frame of its own on this client, drawn above anything parented to the
 	-- window at the usual level: a button in the corner goes behind the corner art and is simply not
 	-- there. Lifting it above the border is what makes it visible.
-	help:SetFrameLevel((frame:GetFrameLevel() or 1) + 20)
 	help:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
+	UI.corners[#UI.corners + 1] = help
 	UI.focus.help = help
 
 	local hasBand = frameTemplate == "ButtonFrameTemplate"
@@ -2477,6 +2493,7 @@ local function BuildBook()
 			TextTooltip(self, T.Label(self.token), format("%d macros to start from.", #(T[self.token] or {})))
 		end)
 		b:SetScript("OnLeave", HideTooltip)
+		b:Hide()
 		classButtons[#classButtons + 1] = b
 	end
 
@@ -2846,7 +2863,7 @@ local function BuildFooter()
 	checkStatus:SetHeight(18)
 	checkStatus:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 5)
 	checkStatus:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 5)
-	checkStatus:SetFrameLevel((frame:GetFrameLevel() or 1) + 20)
+	UI.corners[#UI.corners + 1] = checkStatus
 	checkStatus.text = checkStatus:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	checkStatus.text:SetAllPoints()
 	checkStatus.text:SetJustifyH("LEFT")
@@ -2889,6 +2906,11 @@ local function Build()
 	end)
 
 	UI:SyncTabs()
+	UI:LiftCorners()
+	-- The book is drawn here rather than only from Refresh, which redraws it for the My macros
+	-- chapter alone: on the first open every other chapter was left as it was built, which is to
+	-- say empty, with the class band showing over it.
+	UI:RefreshBook()
 	UI:Refresh()
 end
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.3
+
+- The ? was there to be hovered but not to be seen, and so was the check line along the bottom whenever the window had been clicked. Both sit on the window border rather than inside it, and the window re-levels itself every time it is shown or brought to the front, which left them stranded under the border art. They are lifted again on every show and every click now, from one place that knows about all of them.
+- The book was drawn on the first open only for the My macros chapter, so everything else opened to an empty page with the class icons showing over it — the tab said Parts and the page said nothing. It is drawn as the window is built.
+- The class icons start hidden, and a chapter the addon does not have can no longer throw on its way to being named.
+
 ## 1.4.2
 
 - The ? in the title bar was not there to be clicked. The window border is a frame of its own on this client and draws above anything parented to the window at the usual level, so a button tucked into the corner went behind the corner art. It sits above the border now.

@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.4.2"
+ns.VERSION = "1.4.3"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255

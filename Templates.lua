@@ -307,6 +307,7 @@ function T.ClassOrder()
 end
 
 function T.Label(token)
+	if type(token) ~= "string" or token == "" then return "?" end
 	if token == "MINE" then return "My macros" end
 	if token == "BLOCKS" then return "Parts" end
 	if token == "GENERAL" then return "General" end

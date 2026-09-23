@@ -2693,17 +2693,17 @@ local function BuildChain()
 	textButton:SetHeight(18)
 	textButton:SetPoint("RIGHT", checkButton, "LEFT", -4, 0)
 	textButton:SetScript("OnClick", function() UI:ToggleWindow(textWindow) end)
-	local pasteButton = MakeButton(chainPane, "Paste a macro", 100,
+	local pasteButton = MakeButton(chainPane, "Paste a macro", 106,
 		"Opens the macro text with everything in it selected, ready for ctrl+V. Whatever you paste is read into the chain: a macro off a website, out of the game's own macro window, or from a friend.")
 	pasteButton:SetHeight(18)
-	pasteButton:SetPoint("RIGHT", checkButton, "LEFT", -4, 0)
+	pasteButton:SetPoint("RIGHT", textButton, "LEFT", -4, 0)
 	pasteButton:SetScript("OnClick", function() UI:PasteMacro() end)
 
 	-- The same tutorials as the ? in the title bar, somewhere nothing can draw over them.
 	local tutorialButton = MakeButton(chainPane, "Tutorial", 72,
 		"Five macros built a step at a time, on this bench, with your own spells.")
 	tutorialButton:SetHeight(18)
-	tutorialButton:SetPoint("RIGHT", textButton, "LEFT", -4, 0)
+	tutorialButton:SetPoint("RIGHT", pasteButton, "LEFT", -4, 0)
 	tutorialButton:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
 	chainPane.note:ClearAllPoints()
 	chainPane.note:SetPoint("RIGHT", tutorialButton, "LEFT", -8, 0)

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+- Paste a macro and Macro text were drawn on top of each other, so the header read "PasVteamnaacrto". The new button was hung off the same edge as the one already there; they hang off each other now, right to left: Tutorial, Paste a macro, Macro text, Check.
+
 ## 1.5.1
 
 - Registering LEARNED_SPELL_IN_TAB threw: this client has never heard of it, and an unknown event name is an error rather than a quiet no. The name for a spell being learned moves about between clients, so both are asked for, each on its own, and /macrobench debug reports which ones this client took.

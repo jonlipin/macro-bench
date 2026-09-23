@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+- The left panel opens on Parts every time. It had been remembering the last chapter you looked at, so looking at My macros once meant opening there ever after.
+
 ## 1.6.0
 
 - Save to a macro slot asks first when something is already there. Updating the macro the bench came from asks "Update Bolt in macro slot 2?", and a name that another macro already has asks "Macro slot 1 already holds Invite. Saving as Invite overwrites it." Either way it shows the first line of what is about to go, so you can see what you would be losing. A slot that is free is written without a word.

@@ -424,7 +424,6 @@ local function CreateBookTab(holder, pane, token, index)
 	tab.token = token
 	tab:SetScript("OnClick", function(self)
 		book.tab = self.token
-		ns.db.lastTab = self.token
 		UI:RefreshBook()
 		UI:SyncTabs()
 	end)
@@ -3224,7 +3223,7 @@ end
 
 function UI:Init()
 	G, V, T = ns.Grammar, ns.Validate, ns.Templates
-	book.tab = ns.db.lastTab or "BLOCKS"
+	book.tab = "BLOCKS"
 	book.class = ns.db.lastClass or select(2, UnitClass("player")) or "WARRIOR"
 	self:UpdateMinimapButton()
 end

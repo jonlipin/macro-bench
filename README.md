@@ -37,7 +37,7 @@ Each line is a chain of parts on its own rail, numbered down the left.
 - **The line number** down the left has a delete under it: one click takes that whole line out.
 - **The action block** is the line's command. Drag it to move the whole line; right-click it to take the line out. Click it and the panel below lists the commands.
 - **A condition block** is one kind of question: *pressed with* (shift, ctrl, alt, and which mouse button pressed it), *aimed at* (mouseover, target, focus, you, and whether the unit is an enemy, friendly, alive), *only when* (in combat, stealthed, mounted, in a form). One set of brackets can hold all three; the bench shows them as separate blocks and puts them back together as one condition.
-- **The argument block** is the spell, the item, the sequence, whatever the command takes. Drop a spell or item from the game straight onto it, or use the button beside its box to open the spellbook or your bags.
+- **The argument block** is the spell, the item, the sequence, whatever the command takes. Typing in it offers what you actually have — the spellbook for a cast, your bags and gear for a use — and clicking one of those finishes the name for you; tab takes the first. Drop a spell or item from the game straight onto it, or use the button beside its box to open the spellbook or your bags.
 - **or** means a second set of brackets on the same attempt (`[a][b] Spell`): if the first lot do not apply, the game tries the next.
 - **otherwise** is the part after a semicolon: another attempt at the line, read only when nothing above applied.
 - **+** at the end of a line adds any of those.

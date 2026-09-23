@@ -1582,13 +1582,24 @@ local function CreateEditors(host, scroll)
 
 	-- ---- the argument -----------------------------------------------
 	local arg = CreateFrame("Frame", nil, host)
-	Place(arg, 116)
+	Place(arg, 210)
 	local argBox = CreateFrame("EditBox", nil, arg, "InputBoxTemplate")
 	argBox:SetSize(420, 20)
 	argBox:SetPoint("TOPLEFT", 6, 0)
 	argBox:SetAutoFocus(false)
 	argBox:SetScript("OnTextChanged", function(self, userInput)
 		if userInput and UI.sel then UI:SetArg(UI.sel.clause or 1, self:GetText()) end
+		arg:SyncSuggestions()
+	end)
+	argBox:SetScript("OnTabPressed", function() UI:AcceptSuggestion(arg.first) end)
+	argBox:SetScript("OnEditFocusGained", function() arg:SyncSuggestions() end)
+	argBox:SetScript("OnEditFocusLost", function()
+		-- Left open for a moment, so a click on a suggestion lands before they go.
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0.15, function() if not argBox:HasFocus() then arg:SyncSuggestions() end end)
+		else
+			arg:SyncSuggestions()
+		end
 	end)
 	argBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 	argBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -1661,6 +1672,28 @@ local function CreateEditors(host, scroll)
 	note:SetJustifyH("LEFT")
 	arg.note = note
 
+	-- What is being typed, finished. The rows appear under the box as soon as two letters are in,
+	-- and clicking one writes the whole name — so a spell can be had without ever spelling it out.
+	arg.suggestions = {}
+	for i = 1, 6 do
+		local row = CreateFrame("Button", nil, arg)
+		row:SetSize(360, 18)
+		row:SetPoint("TOPLEFT", argBox, "BOTTOMLEFT", 0, -28 - (i - 1) * 18)
+		row.bg = Plate(row, 0.12, 0.12, 0.12, 0.7)
+		row:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+		row.icon = TrimIcon(row:CreateTexture(nil, "ARTWORK"))
+		row.icon:SetSize(16, 16)
+		row.icon:SetPoint("LEFT", 3, 0)
+		row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		row.text:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
+		row.text:SetPoint("RIGHT", -4, 0)
+		row.text:SetJustifyH("LEFT")
+		row.text:SetMaxLines(1)
+		row:SetScript("OnClick", function(self) UI:AcceptSuggestion(self.value) end)
+		row:Hide()
+		arg.suggestions[i] = row
+	end
+
 	local argResolve = arg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	argResolve:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -6)
 	arg.box, arg.resolve = argBox, argResolve
@@ -1680,6 +1713,51 @@ local function CreateEditors(host, scroll)
 			text = G.Trim((text:gsub("^%d+%s*", "")))
 		end
 		return (text ~= "" and text or nil), kind
+	end
+
+	-- A sequence and a random list are several names in one box, so only the one being typed is
+	-- searched, and only that one is replaced when a suggestion is taken.
+	local function Fragment(text, kind)
+		text = text or ""
+		local cut = 0
+		if kind == "sequence" or kind == "spells" or kind == "items" then
+			for pos in text:gmatch("()[,]") do cut = pos end
+		end
+		if cut == 0 and kind == "sequence" then
+			local reset = text:match("^([Rr][Ee][Ss][Ee][Tt]=%S+%s+)")
+			if reset then cut = #reset end
+		end
+		local prefix, rest = text:sub(1, cut), text:sub(cut + 1)
+		local gap = rest:match("^(%s*)") or ""
+		return prefix .. gap, rest:sub(#gap + 1)
+	end
+	arg.Fragment = Fragment
+
+	function arg:SyncSuggestions()
+		local s = UI.sel
+		local b = s and Block(s.block)
+		local rows = self.suggestions
+		local found = {}
+		if b and self.box:HasFocus() then
+			local kind = G.BlockArgKind(b)
+			if kind ~= "lua" and kind ~= "text" and kind ~= "none" and kind ~= "number" then
+				local _, fragment = Fragment(self.box:GetText(), kind)
+				found = ns.Suggest(fragment, kind, #rows)
+			end
+		end
+		for i, row in ipairs(rows) do
+			local entry = found[i]
+			if entry then
+				row.value = entry.name
+				row.icon:SetTexture(entry.icon or ns.QUESTION)
+				row.text:SetText(entry.name .. (entry.what == "item" and "  |cff7a7a7aitem|r" or ""))
+				row:Show()
+			else
+				row.value = nil
+				row:Hide()
+			end
+		end
+		self.first = found[1] and found[1].name or nil
 	end
 
 	function arg:SyncMatch()
@@ -1754,6 +1832,7 @@ local function CreateEditors(host, scroll)
 		end
 		if not self.box:HasFocus() then self.box:SetText(text or "") end
 		self:SyncMatch()
+		self:SyncSuggestions()
 	end
 	E.arg = arg
 
@@ -1798,6 +1877,24 @@ local function CreateEditors(host, scroll)
 
 	for _, e in pairs(E) do e:Hide() end
 	return E
+end
+
+-- Taking a suggestion: the name goes in where the part being typed was, and the keyboard stays in
+-- the box so the next one can be typed straight after.
+function UI:AcceptSuggestion(name)
+	local editor = editors and editors.arg
+	local s = self.sel
+	if not name or not editor or not s then return end
+	local b = Block(s.block)
+	if not b then return end
+	local kind = G.BlockArgKind(b)
+	local prefix = editor.Fragment(editor.box:GetText(), kind)
+	local text = prefix .. name
+	self:SetArg(s.clause or 1, text)
+	editor.box:SetText(text)
+	editor.box:SetCursorPosition(#text)
+	editor.box:SetFocus()
+	editor:SyncSuggestions()
 end
 
 function UI:RefreshPart()

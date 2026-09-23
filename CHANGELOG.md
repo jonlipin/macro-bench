@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- A spell or item box finishes what you are typing. Two letters in, the names you actually have start appearing under the box — your spellbook for a cast, your bags and what you are wearing for a use, both for a tooltip line — and clicking one writes the whole name. Tab takes the first. Names that begin with what you typed come first, then names that merely contain it, so "heal" finds Flash Heal and "word" finds Power Word: Shield.
+- In a sequence or a random list only the name being typed is searched, and only that one is replaced: "reset=combat Renew, flash" completes to "reset=combat Renew, Flash Heal".
+- The lists are read once and kept until the game says a spell was learned or a bag changed.
+
 ## 1.4.4
 
 - The ? is built the way Aura Ledger builds its own, which comes out visible on this client: a plain button wearing the client red button art, taking its strata and its level from the close button beside it rather than from the window. Measuring against the window was the mistake — the close button is the thing on that border that is certainly drawn, so one above it is certainly drawn too. It is taken again on every show and every raise, and /macrobench debug says which art it found and where it ended up.

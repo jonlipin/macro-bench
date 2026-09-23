@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.4.4"
+ns.VERSION = "1.5.0"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -137,6 +137,154 @@ function ns.IconFor(subject, kind)
 	if icon then return icon end
 	local _, itemIcon = ns.ItemInfo(subject)
 	return itemIcon
+end
+
+-- ------------------------------------------------------------------
+-- What you have, for finishing a name as it is typed
+-- ------------------------------------------------------------------
+-- Every spell in your spellbook and every item in your bags, read once and kept until the game says
+-- one of them changed. Passives are left out: a macro cannot cast them.
+local spellCache, itemCache
+
+function ns.ForgetLists(which)
+	if which ~= "items" then spellCache = nil end
+	if which ~= "spells" then itemCache = nil end
+end
+
+function ns.SpellBookList()
+	if spellCache then return spellCache end
+	local out, seen = {}, {}
+	local function Add(name, icon, passive)
+		name = Clean(name)
+		if passive or not name or name == "" or seen[strlower(name)] then return end
+		seen[strlower(name)] = true
+		out[#out + 1] = { name = name, icon = Clean(icon), what = "spell" }
+	end
+	if C_SpellBook and C_SpellBook.GetNumSpellBookItems and Enum and Enum.SpellBookSpellBank then
+		for _, bank in ipairs({ Enum.SpellBookSpellBank.Player, Enum.SpellBookSpellBank.Pet }) do
+			local ok, num = pcall(C_SpellBook.GetNumSpellBookItems, bank)
+			num = ok and Clean(num) or 0
+			for i = 1, num do
+				local okInfo, info = pcall(C_SpellBook.GetSpellBookItemInfo, i, bank)
+				if okInfo and type(info) == "table" then
+					Add(info.name, info.iconID, info.isPassive)
+				end
+			end
+		end
+	end
+	if #out == 0 and GetNumSpellTabs and GetSpellBookItemName then
+		local total = 0
+		for tab = 1, (GetNumSpellTabs() or 0) do
+			local ok, _, _, offset, numSpells = pcall(GetSpellTabInfo, tab)
+			if ok and offset and numSpells then total = max(total, offset + numSpells) end
+		end
+		for i = 1, total do
+			local ok, name = pcall(GetSpellBookItemName, i, BOOKTYPE_SPELL or "spell")
+			local icon
+			if GetSpellBookItemTexture then
+				local okTex, tex = pcall(GetSpellBookItemTexture, i, BOOKTYPE_SPELL or "spell")
+				icon = okTex and Clean(tex) or nil
+			end
+			if ok then Add(name, icon) end
+		end
+	end
+	table.sort(out, function(a, b) return a.name < b.name end)
+	spellCache = out
+	return out
+end
+
+function ns.BagItemList()
+	if itemCache then return itemCache end
+	local out, seen = {}, {}
+	local function Add(name, icon)
+		name = Clean(name)
+		if not name or name == "" or seen[strlower(name)] then return end
+		seen[strlower(name)] = true
+		out[#out + 1] = { name = name, icon = Clean(icon), what = "item" }
+	end
+	local container = C_Container
+	local numBags = (NUM_BAG_SLOTS or 4)
+	for bag = 0, numBags do
+		local slots = 0
+		if container and container.GetContainerNumSlots then
+			local ok, n = pcall(container.GetContainerNumSlots, bag)
+			slots = ok and Clean(n) or 0
+		elseif GetContainerNumSlots then
+			local ok, n = pcall(GetContainerNumSlots, bag)
+			slots = ok and Clean(n) or 0
+		end
+		for slot = 1, slots do
+			local link, icon
+			if container and container.GetContainerItemInfo then
+				local ok, info = pcall(container.GetContainerItemInfo, bag, slot)
+				if ok and type(info) == "table" then
+					link, icon = Clean(info.hyperlink), Clean(info.iconFileID)
+				end
+			elseif GetContainerItemInfo then
+				local ok, tex, _, _, _, _, _, itemLink = pcall(GetContainerItemInfo, bag, slot)
+				if ok then link, icon = Clean(itemLink), Clean(tex) end
+			end
+			if link then Add(link:match("%[(.-)%]"), icon) end
+		end
+	end
+	-- What you are wearing, so "Trinket" completes even when it is not in a bag.
+	for slot = 1, 19 do
+		local link
+		if GetInventoryItemLink then
+			local ok, l = pcall(GetInventoryItemLink, "player", slot)
+			link = ok and Clean(l) or nil
+		end
+		if link then
+			local icon
+			if GetInventoryItemTexture then
+				local okTex, tex = pcall(GetInventoryItemTexture, "player", slot)
+				icon = okTex and Clean(tex) or nil
+			end
+			Add(link:match("%[(.-)%]"), icon)
+		end
+	end
+	table.sort(out, function(a, b) return a.name < b.name end)
+	itemCache = out
+	return out
+end
+
+-- What could finish what has been typed. Names that start with it come first, then names that
+-- merely contain it, which is how you find "Greater Healing Wave" by typing "heal".
+function ns.Suggest(text, kind, limit)
+	text = strlower(ns.Grammar.Trim(text or ""))
+	if text == "" or #text < 2 then return {} end
+	limit = limit or 6
+	local lists = {}
+	if kind == "item" or kind == "items" or kind == "slotitem" then
+		lists[1], lists[2] = ns.BagItemList(), ns.SpellBookList()
+	elseif kind == "subject" then
+		lists[1], lists[2] = ns.SpellBookList(), ns.BagItemList()
+	else
+		lists[1] = ns.SpellBookList()
+	end
+	local starts, holds = {}, {}
+	for _, list in ipairs(lists) do
+		for _, entry in ipairs(list) do
+			local name = strlower(entry.name)
+			if name == text then
+				-- Already exactly what they have: nothing to finish.
+			elseif name:sub(1, #text) == text then
+				starts[#starts + 1] = entry
+			elseif name:find(text, 1, true) then
+				holds[#holds + 1] = entry
+			end
+		end
+	end
+	local out = {}
+	for _, entry in ipairs(starts) do
+		if #out >= limit then return out end
+		out[#out + 1] = entry
+	end
+	for _, entry in ipairs(holds) do
+		if #out >= limit then return out end
+		out[#out + 1] = entry
+	end
+	return out
 end
 
 -- ------------------------------------------------------------------
@@ -553,6 +701,9 @@ events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_REGEN_ENABLED")
 events:RegisterEvent("UPDATE_MACROS")
 events:RegisterEvent("PLAYER_LOGOUT")
+events:RegisterEvent("SPELLS_CHANGED")
+events:RegisterEvent("LEARNED_SPELL_IN_TAB")
+events:RegisterEvent("BAG_UPDATE_DELAYED")
 events:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		ns.InitDB()
@@ -564,6 +715,10 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		FlushQueue()
 	elseif event == "PLAYER_LOGOUT" then
 		ns.SaveBench()
+	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_TAB" then
+		ns.ForgetLists("spells")
+	elseif event == "BAG_UPDATE_DELAYED" then
+		ns.ForgetLists("items")
 	elseif event == "UPDATE_MACROS" then
 		if ns.UI and ns.UI.MacrosChanged then ns.UI:MacrosChanged() end
 	end

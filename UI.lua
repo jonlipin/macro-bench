@@ -2397,14 +2397,19 @@ local function BuildFrame()
 	end
 
 	-- Up beside the close button, where a question mark belongs.
-	local help = MakeButton(frame, "?", 24, "Tutorials: a macro built a step at a time, on this bench, with your own spells.")
-	help:SetHeight(22)
+	local help = MakeButton(frame, "?", 26, "Tutorials: a macro built a step at a time, on this bench, with your own spells.")
+	help:SetHeight(24)
 	if frame.CloseButton then
-		help:SetPoint("RIGHT", frame.CloseButton, "LEFT", 2, 0)
+		help:SetPoint("RIGHT", frame.CloseButton, "LEFT", -1, 0)
 	else
-		help:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -32, -6)
+		help:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -34, -6)
 	end
+	-- The frame's border is a frame of its own on this client, drawn above anything parented to the
+	-- window at the usual level: a button in the corner goes behind the corner art and is simply not
+	-- there. Lifting it above the border is what makes it visible.
+	help:SetFrameLevel((frame:GetFrameLevel() or 1) + 20)
 	help:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
+	UI.focus.help = help
 
 	local hasBand = frameTemplate == "ButtonFrameTemplate"
 	body = CreateFrame("Frame", nil, frame)
@@ -2519,8 +2524,14 @@ local function BuildChain()
 	textButton:SetHeight(18)
 	textButton:SetPoint("RIGHT", checkButton, "LEFT", -4, 0)
 	textButton:SetScript("OnClick", function() UI:ToggleWindow(textWindow) end)
+	-- The same tutorials as the ? in the title bar, somewhere nothing can draw over them.
+	local tutorialButton = MakeButton(chainPane, "Tutorial", 72,
+		"Five macros built a step at a time, on this bench, with your own spells.")
+	tutorialButton:SetHeight(18)
+	tutorialButton:SetPoint("RIGHT", textButton, "LEFT", -4, 0)
+	tutorialButton:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
 	chainPane.note:ClearAllPoints()
-	chainPane.note:SetPoint("RIGHT", textButton, "LEFT", -8, 0)
+	chainPane.note:SetPoint("RIGHT", tutorialButton, "LEFT", -8, 0)
 
 	statusText = chainPane:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	statusText:SetPoint("TOPLEFT", 8, -26)
@@ -2827,11 +2838,15 @@ local function BuildFooter()
 	newButton:SetPoint("RIGHT", keepButton, "LEFT", -5, 0)
 	newButton:SetScript("OnClick", function() UI:NewMacro() end)
 
-	-- How the macro stands, at a glance, without opening the check.
-	checkStatus = CreateFrame("Button", nil, footer)
-	checkStatus:SetHeight(20)
-	checkStatus:SetPoint("LEFT", perCharLabel, "RIGHT", 16, 0)
-	checkStatus:SetPoint("RIGHT", newButton, "LEFT", -10, 0)
+	-- How the macro stands, at a glance, without opening the check. It goes in the grey band the
+	-- window's own art puts along the bottom, where it has the whole width to itself rather than
+	-- whatever is left between the tick box and the buttons. That band is outside the inset, so it
+	-- is parented to the window and lifted above the border, which is a frame of its own here.
+	checkStatus = CreateFrame("Button", nil, frame)
+	checkStatus:SetHeight(18)
+	checkStatus:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 5)
+	checkStatus:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 5)
+	checkStatus:SetFrameLevel((frame:GetFrameLevel() or 1) + 20)
 	checkStatus.text = checkStatus:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	checkStatus.text:SetAllPoints()
 	checkStatus.text:SetJustifyH("LEFT")
@@ -2918,9 +2933,12 @@ function UI:UpdateMinimapButton()
 			end)
 		end)
 		b:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
-		b:SetScript("OnClick", function() UI:Toggle() end)
+		b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+		b:SetScript("OnClick", function(_, button)
+			if button == "RightButton" then ns.Tutorial:Toggle() else UI:Toggle() end
+		end)
 		b:SetScript("OnEnter", function(self)
-			TextTooltip(self, "Macro Bench", "Build a macro from blocks and watch the text write itself.", "Left-click to open.")
+			TextTooltip(self, "Macro Bench", "Build a macro from blocks and watch the text write itself.", "Left-click to open. Right-click for the tutorials.")
 		end)
 		b:SetScript("OnLeave", HideTooltip)
 		self.minimapButton = b

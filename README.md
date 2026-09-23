@@ -47,7 +47,7 @@ Each line is a chain of parts on its own rail, numbered down the left.
 
 ## Tutorials
 
-The |cffffd100?|r beside the close button (or `/macrobench tutorial`) opens five of them: a mouseover spell, two spells on one key, a trinket and a cast together, a list cast one per press, and a line that only runs sometimes. Each builds a real macro on the bench with your own spells. A step says what to do and a gold frame pulses round the thing it means; when the bench says the step is done it moves on by itself. Stop and carry on whenever you like — starting one halfway through a macro skips whatever is already true.
+The **?** beside the close button, the **Tutorial** button on the macro header, a right-click on the minimap button, or `/macrobench tutorial` — any of them opens five of them: a mouseover spell, two spells on one key, a trinket and a cast together, a list cast one per press, and a line that only runs sometimes. Each builds a real macro on the bench with your own spells. A step says what to do and a gold frame pulses round the thing it means; when the bench says the step is done it moves on by itself. Stop and carry on whenever you like — starting one halfway through a macro skips whatever is already true.
 
 ## The check
 

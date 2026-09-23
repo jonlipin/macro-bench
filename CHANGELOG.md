@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+- The ? in the title bar was not there to be clicked. The window border is a frame of its own on this client and draws above anything parented to the window at the usual level, so a button tucked into the corner went behind the corner art. It sits above the border now.
+- The check line moved to the grey band the window draws along its very bottom, where it has the whole width and no longer reads "nothing on t…" in the gap between the tick box and the buttons. Clicking it still opens the whole list, and hovering it still lists the first few findings.
+- Two more ways to the same tutorials, since one that can be hidden is not enough: a Tutorial button on the macro header beside Macro text and Check, and a right-click on the minimap button.
+
 ## 1.4.1
 
 - Left click, right click, middle click and the two side buttons are conditions of their own in the Modifier block, three-way like the rest. They were only reachable before through a box labelled "Mouse button" that wanted a number, which is no use unless you already knew [button:2] meant right click. A line now reads "pressed with right click" in the chain and in words.

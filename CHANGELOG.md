@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.1
+
+- The minimap button sat inside the ring the others are on. Its reach was a fixed 80 from the centre, which is right only for a minimap of the size the game ships; measured from the minimap own width plus six, as Aura Ledger measures it, the two now sit on one ring whatever size the minimap has been made. The icon moved to where the tracking border window is rather than the middle of the button, and it has the same dark backing behind it that the others have.
+- Dragging it works on a client without math.atan2, and the angle is kept between 0 and 360.
+
 ## 1.7.0
 
 - A part that cannot be used yet is dimmed. Before anything is on the bench that is every condition block, because a condition needs a line to belong to; once there is a line, any block the line does not read conditions on stays dim too. Clicking a dim one says why rather than doing nothing, and its tooltip says it before you click.

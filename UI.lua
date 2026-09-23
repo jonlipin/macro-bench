@@ -3188,12 +3188,16 @@ end
 -- ------------------------------------------------------------------
 -- Minimap button
 -- ------------------------------------------------------------------
+-- The ring the other buttons sit on is the minimap's own edge, so the reach has to be measured from
+-- the minimap rather than assumed: a minimap another addon has made bigger left a fixed 80 sitting
+-- inside it. Same measurement Aura Ledger uses, so the two sit on one ring.
 local function PlaceMinimapButton()
 	local b = UI.minimapButton
-	if not b then return end
+	if not b or not Minimap then return end
 	local angle = math.rad(ns.db.minimapAngle or 200)
+	local radius = (Minimap:GetWidth() or 140) / 2 + 6
 	b:ClearAllPoints()
-	b:SetPoint("CENTER", Minimap, "CENTER", 80 * math.cos(angle), 80 * math.sin(angle))
+	b:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * radius, math.sin(angle) * radius)
 end
 
 function UI:UpdateMinimapButton()
@@ -3205,9 +3209,16 @@ function UI:UpdateMinimapButton()
 		local b = CreateFrame("Button", "MacroBenchMinimapButton", Minimap)
 		b:SetSize(31, 31)
 		b:SetFrameStrata("MEDIUM")
-		local icon = b:CreateTexture(nil, "BACKGROUND")
-		icon:SetSize(20, 20)
-		icon:SetPoint("CENTER", 0, 1)
+		b:SetFrameLevel((Minimap:GetFrameLevel() or 1) + 8)
+		-- The icon sits where the tracking border's window is, not in the middle of the button:
+		-- the border art is 53 wide anchored at the corner, so its ring is up and to the left.
+		local bg = b:CreateTexture(nil, "BACKGROUND")
+		bg:SetSize(20, 20)
+		bg:SetPoint("TOPLEFT", 7, -5)
+		bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+		local icon = b:CreateTexture(nil, "ARTWORK")
+		icon:SetSize(18, 18)
+		icon:SetPoint("TOPLEFT", 7, -6)
 		icon:SetTexture(ICON)
 		TrimIcon(icon)
 		local border = b:CreateTexture(nil, "OVERLAY")
@@ -3221,7 +3232,9 @@ function UI:UpdateMinimapButton()
 				local mx, my = Minimap:GetCenter()
 				local scale = Minimap:GetEffectiveScale()
 				local cx, cy = GetCursorPosition()
-				ns.db.minimapAngle = math.deg(math.atan2(cy / scale - my, cx / scale - mx))
+				if not (mx and my and cx and cy) then return end
+				local atan2 = math.atan2 or function(y, x) return math.atan(y, x) end
+				ns.db.minimapAngle = math.deg(atan2(cy / scale - my, cx / scale - mx)) % 360
 				PlaceMinimapButton()
 			end)
 		end)

@@ -8,14 +8,14 @@ Macro Bench builds a macro out of small blocks you drag about. One line of the m
 [Cast] › [held down: shift] › [aimed at: mouseover, an enemy, alive] › [Polymorph]
 ```
 
-which is `/cast [mod:shift,@mouseover,harm,nodead] Polymorph`. Every part is its own block: drag it, drop it on another line, throw it away, or click it to open its own options underneath. Under the chain, always visible, is the macro text the chain adds up to. Both are live and both are editable — change a block and the text rewrites itself, type in the text and the chain is read back out of it. Neither one is a copy of the other; they are the same macro, seen twice.
+which is `/cast [mod:shift,@mouseover,harm,nodead] Polymorph`. Every part is its own block: drag it, drop it on another line, throw it away, or click it to open its own options underneath. Under the chain, always visible, is the macro text the chain adds up to. Both are live and both are editable: change a block and the text rewrites itself, type in the text and the chain is read back out of it. Neither one is a copy of the other; they are the same macro, seen twice.
 
 `/macrobench` (or the minimap button) opens it.
 
 ## The way through
 
 1. **New macro** at the bottom clears the bench.
-2. Drag an **action** in from the left — Cast, Cast in order, Use item, Target — or drop a spell straight out of your spellbook, which arrives as a Cast block already filled in.
+2. Drag an **action** in from the left (Cast, Cast in order, Use item, Target), or drop a spell straight out of your spellbook, which arrives as a Cast block already filled in.
 3. Drag a **Modifier**, **Target filter** or **My state** block onto that line to say when it runs.
 4. **Click any part** to set it up in the panel underneath: the action becomes a list of commands, a target filter becomes units and tick boxes, an argument becomes a text box.
 5. Add more lines the same way, and drag them by their action block to reorder.
@@ -37,7 +37,7 @@ Each line is a chain of parts on its own rail, numbered down the left.
 - **The line number** down the left has a delete under it: one click takes that whole line out.
 - **The action block** is the line's command. Drag it to move the whole line; right-click it to take the line out. Click it and the panel below lists the commands.
 - **A condition block** is one kind of question: *pressed with* (shift, ctrl, alt, and which mouse button pressed it), *aimed at* (mouseover, target, focus, you, and whether the unit is an enemy, friendly, alive), *only when* (in combat, stealthed, mounted, in a form). One set of brackets can hold all three; the bench shows them as separate blocks and puts them back together as one condition.
-- **The argument block** is the spell, the item, the sequence, whatever the command takes. Typing in it offers what you actually have — the spellbook for a cast, your bags and gear for a use — and clicking one of those finishes the name for you; tab takes the first. Drop a spell or item from the game straight onto it, or use the button beside its box to open the spellbook or your bags.
+- **The argument block** is the spell, the item, the sequence, whatever the command takes. Typing in it offers what you actually have (the spellbook for a cast, your bags and gear for a use), and clicking one of those finishes the name for you; tab takes the first. Drop a spell or item from the game straight onto it, or use the button beside its box to open the spellbook or your bags.
 - **or** means a second set of brackets on the same attempt (`[a][b] Spell`): if the first lot do not apply, the game tries the next.
 - **otherwise** is the part after a semicolon: another attempt at the line, read only when nothing above applied.
 - **+** at the end of a line adds any of those.
@@ -47,14 +47,14 @@ Each line is a chain of parts on its own rail, numbered down the left.
 
 ## Tutorials
 
-The **?** beside the close button, the **Tutorial** button on the macro header, a right-click on the minimap button, or `/macrobench tutorial` — any of them opens five of them: a mouseover spell, two spells on one key, a trinket and a cast together, a list cast one per press, and a line that only runs sometimes. Each builds a real macro on the bench with your own spells. A step says what to do and a gold frame pulses round the thing it means; when the bench says the step is done it moves on by itself. Stop and carry on whenever you like — starting one halfway through a macro skips whatever is already true.
+The **?** beside the close button, the **Tutorial** button on the macro header, a right-click on the minimap button, or `/macrobench tutorial`: any of them opens five of them: a mouseover spell, two spells on one key, a trinket and a cast together, a list cast one per press, and a line that only runs sometimes. Each builds a real macro on the bench with your own spells. A step says what to do and a gold frame pulses round the thing it means; when the bench says the step is done it moves on by itself. Stop and carry on whenever you like; starting one halfway through a macro skips whatever is already true.
 
 ## The check
 
 Three passes, none of which run the macro.
 
 1. **The grammar and the slots.** Commands the game does not have, conditions that do not exist (with the closest real one suggested), brackets left open, a clause nothing can ever reach, two casts on one press where only the first can fire, `reset=` written wrongly, `#showtooltip` somewhere the game will not read it, a spell named by id instead of by name, spells that are not in your spellbook, and the 255 character wall with how much is over.
-2. **Scripts.** A `/run` or `/script` body is handed to `loadstring`, which compiles it and gives back a real syntax error with a position, without executing a single line. The same pass flags calls the game refuses from a script during combat — `CastSpellByName`, `UseAction`, `TargetUnit` and the rest — which is the usual reason a script macro that "works" dies in a raid.
+2. **Scripts.** A `/run` or `/script` body is handed to `loadstring`, which compiles it and gives back a real syntax error with a position, without executing a single line. The same pass flags calls the game refuses from a script during combat (`CastSpellByName`, `UseAction`, `TargetUnit` and the rest), which is the usual reason a script macro that "works" dies in a raid.
 3. **Now.** Conditions are handed to `SecureCmdOptionParse`, the client's own condition parser, so what a line will do is answered by the game rather than guessed at.
 
 Findings are listed worst first under the bench. Click one to jump to the line it is about; a line with something wrong is tinted and carries a mark you can hover.

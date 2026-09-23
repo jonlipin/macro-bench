@@ -1262,7 +1262,7 @@ local function TriButton(parent, term, label, width)
 			self.outline:Set(0.6, 0.25, 0.25, 1)
 			self.bg:SetColorTexture(0.16, 0.05, 0.05, 0.9)
 		else
-			self.state:SetText("|cff5a5a5a–|r")
+			self.state:SetText("|cff5a5a5a-|r")
 			self.outline:Set(0.28, 0.26, 0.2, 1)
 			self.bg:SetColorTexture(0.09, 0.09, 0.09, 0.85)
 		end
@@ -1281,7 +1281,7 @@ local function TriGrid(parent, defs, cols, colW, y0)
 end
 
 -- A condition that takes something after the colon. The button in the middle says what the row is
--- doing in words — not asked, is, is not — rather than a bare tick box, which reads as "on" when it
+-- doing in words (not asked, is, is not) rather than a bare tick box, which reads as "on" when it
 -- means "not". Typing in the box turns the row on by itself, so a filled-in row is never idle.
 -- bare: the condition means something with nothing after the colon, as [pet] does. Where it does
 -- not, emptying the box takes the condition off altogether.
@@ -1672,7 +1672,7 @@ local function CreateEditors(host, scroll)
 	arg.note = note
 
 	-- What is being typed, finished. The rows appear under the box as soon as two letters are in,
-	-- and clicking one writes the whole name — so a spell can be had without ever spelling it out.
+	-- and clicking one writes the whole name, so a spell can be had without ever spelling it out.
 	arg.suggestions = {}
 	for i = 1, 6 do
 		local row = CreateFrame("Button", nil, arg)
@@ -2324,11 +2324,11 @@ function UI:RefreshFooter()
 	local name = G.Trim(ns.bench.name or "")
 	local where
 	if ns.bench.slot then
-		where = format("|cffffd100%s|r — saving replaces macro slot %d.", name ~= "" and name or "?", ns.bench.slot)
+		where = format("|cffffd100%s|r. Saving replaces macro slot %d.", name ~= "" and name or "?", ns.bench.slot)
 	elseif ns.bench.draft then
-		where = format("|cffffd100%s|r — kept in the library, not in a macro slot yet.", name ~= "" and name or "?")
+		where = format("|cffffd100%s|r. Kept in the library, not in a macro slot yet.", name ~= "" and name or "?")
 	elseif name ~= "" then
-		where = format("|cffffd100%s|r — new, saved nowhere yet.", name)
+		where = format("|cffffd100%s|r. New, saved nowhere yet.", name)
 	else
 		where = "|cff9d9d9dA new macro. Give it a name at the bottom before you save it.|r"
 	end
@@ -2802,7 +2802,7 @@ local function BuildChain()
 	chainEmpty:SetPoint("TOPLEFT", chainScroll, "TOPLEFT", 14, -14)
 	chainEmpty:SetPoint("RIGHT", chainScroll, "RIGHT", -14, 0)
 	chainEmpty:SetJustifyH("LEFT")
-	chainEmpty:SetText("Nothing on the bench yet.\n\n1. Drag an action in from the left — Cast, Use item, Target — or drop a spell straight out of your spellbook.\n2. Drag a Modifier, Target filter or My state block onto that line to say when it runs.\n3. Click any part to set it up down here.\n4. Name it at the bottom and save it to a macro slot.")
+	chainEmpty:SetText("Nothing on the bench yet.\n\n1. Drag an action in from the left (Cast, Use item, Target), or drop a spell straight out of your spellbook.\n2. Drag a Modifier, Target filter or My state block onto that line to say when it runs.\n3. Click any part to set it up down here.\n4. Name it at the bottom and save it to a macro slot.")
 
 end
 

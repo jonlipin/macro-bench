@@ -55,16 +55,16 @@ T.PALETTE = {
 	-- same way an action is dragged onto the chain.
 	{ heading = "When does it run", items = {
 		-- seed: what the part says the moment it lands, so it is never an empty block you cannot see.
-		-- shows: what it says while it is still in the list — the range it covers, not the one value
+		-- shows: what it says while it is still in the list: the range it covers, not the one value
 		-- it happens to arrive with, which would read as the only thing it can say.
 		{ part = "mods", seed = "mod:shift", shows = "shift, ctrl, right click…", label = "Modifier", icon = RAGE,
 		  tip = "Which modifier keys have to be held down, which must not be, and which mouse button pressed the macro: left, right, middle or the two side buttons. Dropped on a line, it decides when that line runs. It arrives set to shift; click it to change." },
 		{ part = "target", seed = "@mouseover", shows = "mouseover, target, focus…", label = "Target filter", icon = SWORD,
-		  tip = "What the line is aimed at — mouseover, target, focus, you, your pet, anybody by name — and what has to be true of it: an enemy, friendly, alive, dead, in your party. It arrives aimed at your mouseover; click it to change." },
+		  tip = "What the line is aimed at (mouseover, target, focus, you, your pet, anybody by name) and what has to be true of it: an enemy, friendly, alive, dead, in your party. It arrives aimed at your mouseover; click it to change." },
 		{ part = "state", seed = "combat", shows = "in combat, stealthed…", label = "My state", icon = PET,
 		  tip = "What has to be true of you: in combat, stealthed, mounted, swimming, indoors, in a form, which pet is out, what you have equipped. It arrives set to in combat; click it to change." },
 		{ part = "or", label = "Or these instead", icon = SEQ, shows = "a second set of brackets",
-		  tip = "A second set of brackets on the same attempt. The game tries the conditions before it; if they do not apply it tries these, and the first set that does decides what happens. In the macro it is [these][or these] Spell — the mouseover ladder every healer uses." },
+		  tip = "A second set of brackets on the same attempt. The game tries the conditions before it; if they do not apply it tries these, and the first set that does decides what happens. In the macro it is [these][or these] Spell, the mouseover ladder every healer uses." },
 		{ part = "otherwise", label = "Otherwise", icon = SEQ, tip = "Another go at the same line, read only when the conditions before it do not apply. The part after the semicolon." },
 	} },
 	{ heading = "The button itself", items = {

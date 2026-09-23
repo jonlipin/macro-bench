@@ -1,5 +1,5 @@
 -- Macro Bench tutorials: a few macros built a step at a time, in your own window, on your own
--- character, with your own spells. Not a video and not a wall of text — each step asks for one
+-- character, with your own spells. Not a video and not a wall of text. Each step asks for one
 -- thing and watches the bench until it is there, then moves on by itself.
 --
 -- A step is done when its "done" says so. That is one of:
@@ -39,7 +39,7 @@ Tut.LESSONS = {
 			{ focus = "palette:Cast", text = "In the |cffffd100Parts|r chapter on the left, find the gold |cffffd100Cast|r block and click it. It lands at the end of the chain.",
 			  hint = "Dragging it onto the chain does the same thing, and lets you choose where it goes.",
 			  done = "^/cast" },
-			{ focus = "part", text = "The block is open in the panel underneath. Click into its box and type a spell you actually have — a heal if you have one, otherwise anything.",
+			{ focus = "part", text = "The block is open in the panel underneath. Click into its box and type a spell you actually have: a heal if you have one, otherwise anything.",
 			  hint = "Under the box it tells you whether the game recognised the name, and hovering that shows the spell's own tooltip.",
 			  done = "^/cast%s+%a" },
 			{ focus = "palette:Target filter", text = "Now click the blue |cffffd100Target filter|r block in the parts list. It lands on the line aimed at your mouseover.",
@@ -68,7 +68,7 @@ Tut.LESSONS = {
 			{ focus = "palette:Modifier", text = "Click the |cffffd100Modifier|r block in the parts list. It lands on the line set to shift.",
 			  hint = "Three-way buttons: click Shift again and it asks for shift NOT being held.",
 			  done = "mod:shift" },
-			{ focus = "chain", text = "That is the shift spell. Now click the |cffffd100+|r block at the end of the line and choose |cffffd100Otherwise|r — the part after the semicolon, read when shift is not down.",
+			{ focus = "chain", text = "That is the shift spell. Now click the |cffffd100+|r block at the end of the line and choose |cffffd100Otherwise|r, the part after the semicolon, read when shift is not down.",
 			  done = ";" },
 			{ focus = "chain", text = "Click the new |cffffd100…|r block after \"otherwise\" and type the everyday spell into it.",
 			  done = function()
@@ -76,7 +76,7 @@ Tut.LESSONS = {
 				  local after = text:match(";%s*(.+)$")
 				  return after ~= nil and after:match("%a") ~= nil
 			  end },
-			{ focus = "palette:#showtooltip", text = "Add a |cffffd100#showtooltip|r block so the button wears the right icon and cooldown. It has to be the first line — drag it to the top if it is not.",
+			{ focus = "palette:#showtooltip", text = "Add a |cffffd100#showtooltip|r block so the button wears the right icon and cooldown. It has to be the first line, so drag it to the top if it is not.",
 			  hint = "The check will tell you if it is in the wrong place.",
 			  done = "^#showtooltip" },
 			{ text = "Name it at the bottom and |cffffd100Save to a macro slot|r.",
@@ -136,7 +136,7 @@ Tut.LESSONS = {
 			  done = "^/cast%s+%a" },
 			{ focus = "palette:My state", text = "Click the |cffffd100My state|r block in the parts list. It lands set to \"in combat\".",
 			  done = "combat" },
-			{ focus = "part", text = "Open it and look: every condition the game has about you is in there. Click |cffffd100In combat|r twice, so it reads |cffff5050no|r — the line now only runs out of combat.",
+			{ focus = "part", text = "Open it and look: every condition the game has about you is in there. Click |cffffd100In combat|r twice, so it reads |cffff5050no|r. The line now only runs out of combat.",
 			  hint = "Three-way buttons everywhere: not asked, must be true, must be false.",
 			  done = "nocombat" },
 			{ focus = "part", text = "Look at the right of the panel: it says what the line does |cffffd100as things stand|r, answered by the game itself. Step into combat and it changes.",
@@ -327,7 +327,7 @@ function Tut:Build()
 	pick.intro:SetPoint("TOPLEFT", 4, -2)
 	pick.intro:SetPoint("RIGHT", -4, 0)
 	pick.intro:SetJustifyH("LEFT")
-	pick.intro:SetText("Pick one. Each builds a real macro on the bench, a step at a time, with your own spells — and you can stop and carry on whenever you like.")
+	pick.intro:SetText("Pick one. Each builds a real macro on the bench, a step at a time, with your own spells, and you can stop and carry on whenever you like.")
 	pick.buttons = {}
 	local y = -40
 	for _, lesson in ipairs(self.LESSONS) do

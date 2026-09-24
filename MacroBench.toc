@@ -2,7 +2,7 @@
 ## Title: Macro Bench
 ## Notes: Build a macro from blocks you drag about, watch the macro text write itself beside them, and have every line checked before it goes into a slot.|n|cff00ccff/macrobench|r to open.
 ## Author: Jon
-## Version: 1.9.1
+## Version: 1.9.2
 ## LoadSavedVariablesFirst: 1
 ## SavedVariables: MacroBenchDB
 ## IconTexture: Interface\Icons\INV_Scroll_03

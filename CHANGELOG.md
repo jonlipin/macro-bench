@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.9.1
+## 1.9.2
 
+- Backspacing a step box empty took the step away with it, keyboard and all. The boxes were drawn from the macro text, where an empty step is nothing at all, so the last letter deleted the row. The boxes keep their own shape while one of them has the keyboard: an empty box stays put and goes on taking letters, whether it is the one just added or one in the middle of the list. Only what is actually written reaches the macro, and when the keyboard leaves the empty ones fall away.
+
+## 1.9.1
 - The names on offer are a dropdown, so they are drawn over what is under them rather than tangled with it: opaque, bordered, above everything else in the panel, and the width of the box they belong to. Under a step box they had been sharing their place with the Add a step button.
 
 ## 1.9.0

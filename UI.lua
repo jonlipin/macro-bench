@@ -1898,6 +1898,7 @@ local function CreateEditors(host, scroll)
 	Place(steps, 240)
 	steps.rows = {}
 
+	-- What the macro text says: the reset, and the steps with nothing empty among them.
 	local function StepsOf()
 		local s = UI.sel
 		local b = s and Block(s.block)
@@ -1906,10 +1907,31 @@ local function CreateEditors(host, scroll)
 		return G.SplitSteps(cl and cl.arg or "")
 	end
 
+	-- What the boxes are showing, which is not quite the same thing. An empty step is nothing at all
+	-- to a macro, so a box emptied by backspacing would vanish from under the keyboard as the last
+	-- letter went. While a box has the keyboard the rows keep their shape; when it lets go they are
+	-- read back from the text and anything empty falls away then.
+	local function Working()
+		local reset, list = StepsOf()
+		-- hold: a moment when no box has the keyboard but the shape still has to stand, which is
+		-- what adding a step is. Without it the empty row added would be read away before it drew.
+		if steps.working and (steps.hold or (steps.activeBox and steps.activeBox:HasFocus())) then
+			return reset, steps.working
+		end
+		steps.working = list
+		return reset, steps.working
+	end
+
 	local function WriteSteps(reset, list)
 		local s = UI.sel
 		if not s then return end
-		UI:SetArg(s.clause or 1, G.JoinSteps(reset, list))
+		steps.working = list
+		-- Only what is actually written goes into the macro; the empty boxes stay on screen.
+		local written = {}
+		for _, step in ipairs(list) do
+			if G.Trim(step) ~= "" then written[#written + 1] = step end
+		end
+		UI:SetArg(s.clause or 1, G.JoinSteps(reset, written))
 	end
 
 	local resetLabel = steps:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1925,7 +1947,7 @@ local function CreateEditors(host, scroll)
 		fs:SetPoint("LEFT", b, "RIGHT", 1, 0)
 		fs:SetText(label)
 		b:SetScript("OnClick", function(self)
-			local reset, list = StepsOf()
+			local reset, list = Working()
 			local parts = G.SplitReset(reset)
 			parts[term] = self:GetChecked() and true or nil
 			WriteSteps(G.JoinReset(parts), list)
@@ -1945,7 +1967,7 @@ local function CreateEditors(host, scroll)
 	steps.seconds:SetNumeric(true)
 	steps.seconds:SetScript("OnTextChanged", function(self, userInput)
 		if not userInput then return end
-		local reset, list = StepsOf()
+		local reset, list = Working()
 		local parts = G.SplitReset(reset)
 		parts.seconds = G.Trim(self:GetText())
 		WriteSteps(G.JoinReset(parts), list)
@@ -1974,9 +1996,9 @@ local function CreateEditors(host, scroll)
 		row.box.index = index
 		row.box:SetScript("OnTextChanged", function(self, userInput)
 			if not userInput then return end
-			local reset, list = StepsOf()
+			steps.activeBox = self
+			local reset, list = Working()
 			list[self.index] = self:GetText()
-			if G.Trim(self:GetText()) ~= "" then steps.extra = nil end
 			WriteSteps(reset, list)
 			steps:Offer(self)
 		end)
@@ -1990,7 +2012,7 @@ local function CreateEditors(host, scroll)
 		row.up:SetHeight(20)
 		row.up:SetPoint("LEFT", row.box, "RIGHT", 8, 0)
 		row.up:SetScript("OnClick", function()
-			local reset, list = StepsOf()
+			local reset, list = Working()
 			if index > 1 then
 				list[index], list[index - 1] = list[index - 1], list[index]
 				WriteSteps(reset, list)
@@ -2000,7 +2022,7 @@ local function CreateEditors(host, scroll)
 		row.down:SetHeight(20)
 		row.down:SetPoint("LEFT", row.up, "RIGHT", 2, 0)
 		row.down:SetScript("OnClick", function()
-			local reset, list = StepsOf()
+			local reset, list = Working()
 			if index < #list then
 				list[index], list[index + 1] = list[index + 1], list[index]
 				WriteSteps(reset, list)
@@ -2013,9 +2035,11 @@ local function CreateEditors(host, scroll)
 		row.del:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
 		row.del:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 		row.del:SetScript("OnClick", function()
-			local reset, list = StepsOf()
+			local reset, list = Working()
 			table.remove(list, index)
+			steps.working = list
 			WriteSteps(reset, list)
+			steps:Sync()
 		end)
 		row.del:SetScript("OnEnter", function(self) TextTooltip(self, "Take this step out") end)
 		row.del:SetScript("OnLeave", HideTooltip)
@@ -2026,11 +2050,16 @@ local function CreateEditors(host, scroll)
 	steps.add = MakeButton(steps, "Add a step", 100, "Another spell at the end of the list.")
 	steps.add:SetHeight(20)
 	steps.add:SetScript("OnClick", function()
-		local reset, list = StepsOf()
-		steps.extra = true
+		local reset, list = Working()
+		list[#list + 1] = ""
+		steps.working, steps.hold = list, true
 		steps:Sync()
-		local row = steps.rows[#list + 1]
-		if row then row.box:SetFocus() end
+		local row = steps.rows[#list]
+		if row then
+			steps.activeBox = row.box
+			row.box:SetFocus()
+		end
+		steps.hold = nil
 	end)
 
 	-- One strip of names for whichever step box has the keyboard.
@@ -2059,7 +2088,7 @@ local function CreateEditors(host, scroll)
 	function steps:Accept(name)
 		local box = self.activeBox
 		if not name or not box then return end
-		local reset, list = StepsOf()
+		local reset, list = Working()
 		list[box.index] = name
 		WriteSteps(reset, list)
 		local row = self.rows[box.index]
@@ -2101,7 +2130,7 @@ local function CreateEditors(host, scroll)
 		local s = UI.sel
 		local b = s and Block(s.block)
 		local kind = b and G.BlockArgKind(b) or "sequence"
-		local reset, list = StepsOf()
+		local reset, list = Working()
 		local sequence = kind == "sequence"
 		self.resetLabel:SetShown(sequence)
 		self.combat:SetShown(sequence)
@@ -2117,11 +2146,15 @@ local function CreateEditors(host, scroll)
 		end
 		-- A block opened afresh never starts with an empty row hanging off the end of somebody
 		-- else's list.
+		-- A block opened afresh starts from what its own text says, not from the last one's boxes.
 		if self.lastBlock ~= (s and s.block) or self.lastClause ~= (s and s.clause) then
-			self.extra = nil
+			self.working = nil
+			self.activeBox = nil
 			self.lastBlock, self.lastClause = s and s.block, s and s.clause
+			reset, list = StepsOf()
+			self.working = list
 		end
-		local rows = max(#list + (self.extra and 1 or 0), 1)
+		local rows = max(#list, 1)
 		local top = sequence and -44 or -4
 		for i = 1, rows do
 			local row = StepRow(i)

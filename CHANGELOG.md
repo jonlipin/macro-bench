@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.8.2
+## 1.8.3
 
+- Both lists could read zero for a whole session. They were read once at login, which is before this client has the spellbook or the bags ready, and an empty answer was kept: nothing clears it but an event saying a spell was learned or a bag changed, and neither of those fires just because they arrived. Nothing found is no longer kept, so it is asked again next time, and the first read is when the world loads rather than at login.
+
+## 1.8.2
 - The icon beside the name opens a picker: every icon a macro may wear, sixty at a time, your own spells and items at the front and the game's whole list behind them. The ones with names can be searched. It had only ever toggled between working the icon out and the plain question mark, which is not what clicking an icon looks like it should do. Right-click still goes back to working it out.
 - Finishing a spell name found nothing while items worked. Reading the spellbook asked for the banks by name through an Enum this client may not have, and skipped the whole thing when it was missing. They are asked for by number as well now. Failing everything, the spells on your action bars stand in, which are the ones you write macros about anyway.
 - "/macrobench debug spells" says which of the spellbook calls this client has, what each one answered, and how many spells came back, so an empty list explains itself.

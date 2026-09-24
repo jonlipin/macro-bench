@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.8.2"
+ns.VERSION = "1.8.3"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -235,7 +235,8 @@ function ns.SpellBookList()
 	end
 	table.sort(out, function(a, b) return a.name < b.name end)
 	ns.report["spells for finishing a name"] = #out
-	spellCache = out
+	-- Nothing found is not an answer worth keeping: it is asked again next time.
+	if #out > 0 then spellCache = out end
 	return out
 end
 
@@ -266,7 +267,7 @@ function ns.IconChoices()
 	for _, icon in ipairs(list) do Add(icon) end
 	Add(ns.QUESTION, "Question mark")
 	ns.report["icons to choose from"] = #out
-	iconCache = out
+	if #out > 2 then iconCache = out end
 	return out
 end
 
@@ -352,7 +353,7 @@ function ns.BagItemList()
 	end
 	table.sort(out, function(a, b) return a.name < b.name end)
 	ns.report["items for finishing a name"] = #out
-	itemCache = out
+	if #out > 0 then itemCache = out end
 	return out
 end
 
@@ -831,19 +832,22 @@ Register("SPELLS_CHANGED")
 Register("LEARNED_SPELL_IN_SKILL_LINE")
 Register("LEARNED_SPELL_IN_TAB")
 Register("BAG_UPDATE_DELAYED")
+Register("PLAYER_ENTERING_WORLD")
 events:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		ns.InitDB()
 	elseif event == "PLAYER_LOGIN" then
 		if not ns.db then ns.InitDB() end
 		ns.Grammar.ForgetClientCommands()
-		ns.SpellBookList()
-		ns.BagItemList()
 		ns.UI:Init()
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		FlushQueue()
 	elseif event == "PLAYER_LOGOUT" then
 		ns.SaveBench()
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		ns.ForgetLists()
+		ns.SpellBookList()
+		ns.BagItemList()
 	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_SKILL_LINE" or event == "LEARNED_SPELL_IN_TAB" then
 		ns.ForgetLists("spells")
 	elseif event == "BAG_UPDATE_DELAYED" then

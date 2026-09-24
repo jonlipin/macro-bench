@@ -1,7 +1,11 @@
 # Changelog
 
-## 1.8.3
+## 1.8.4
 
+- Finishing a name found Rain of Fire but not Shadow Bolt, Life Tap but not Fear. This client gives up nothing from its spellbook, so the names were coming from your action bars, and a bar slot holding a macro says only that it holds a macro: every spell you keep inside one was invisible. Your own macros are read now, with the addon's own parser, so every spell named in one is a name you can finish. Your bars are read beside them, and a macro changing reads them again.
+- When the spellbook answers with a count of nothing but still knows the entries themselves, they are asked for one at a time until they run out.
+
+## 1.8.3
 - Both lists could read zero for a whole session. They were read once at login, which is before this client has the spellbook or the bags ready, and an empty answer was kept: nothing clears it but an event saying a spell was learned or a bag changed, and neither of those fires just because they arrived. Nothing found is no longer kept, so it is asked again next time, and the first read is when the world loads rather than at login.
 
 ## 1.8.2

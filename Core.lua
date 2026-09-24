@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.8.3"
+ns.VERSION = "1.8.4"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -217,19 +217,90 @@ function ns.SpellBookList()
 			if ok then Add(name, icon) end
 		end
 	end
-	-- Nothing from the spellbook at all: this client keeps it somewhere none of the above reaches.
-	-- The spells on your action bars are the ones you write macros about anyway, so they stand in.
-	if #out == 0 and GetActionInfo then
-		for slot = 1, 180 do
-			local ok, kind, id = pcall(GetActionInfo, slot)
-			if ok and Clean(kind) == "spell" and Clean(id) then
-				local name, icon = ns.SpellInfo(Clean(id))
-				Add(name, icon)
+	-- The count can come back zero on a client that still answers for the items themselves, so when
+	-- nothing was found the entries are asked for one by one until they run out. Bounded, and it
+	-- stops after thirty misses in a row rather than walking to the end for nothing.
+	if #out == 0 and book and (book.GetSpellBookItemName or book.GetSpellBookItemInfo) then
+		for _, bank in ipairs(banks) do
+			local misses = 0
+			for i = 1, 600 do
+				local name, icon, passive
+				if book.GetSpellBookItemInfo then
+					local okInfo, info = pcall(book.GetSpellBookItemInfo, i, bank)
+					if okInfo and type(info) == "table" then
+						name, icon, passive = Clean(info.name), Clean(info.iconID), Clean(info.isPassive)
+						if (not name or name == "") and Clean(info.spellID) then
+							name, icon = ns.SpellInfo(Clean(info.spellID))
+						end
+					end
+				end
+				if (not name or name == "") and book.GetSpellBookItemName then
+					local okName, n = pcall(book.GetSpellBookItemName, i, bank)
+					if okName then name = Clean(n) end
+				end
+				if name and name ~= "" then
+					misses = 0
+					Add(name, icon, passive)
+				else
+					misses = misses + 1
+					if misses > 30 then break end
+				end
 			end
 		end
-		if #out > 0 then ns.report["spellbook read"] = "from the action bars" end
-	elseif #out > 0 then
+		if #out > 0 then ns.report["spellbook read"] = "one at a time, the count said nothing" end
+	end
+
+	-- Whether the spellbook answered at all decides whether the two passes below are needed: if it
+	-- did, everything is already here.
+	local fromBook = #out
+
+	-- Whatever is still missing, your own macros know: every spell you have written into one is a
+	-- name you are likely to write again. They are read with the addon's own parser, so a spell
+	-- inside a macro on your bars is found even though the bar itself only says "a macro".
+	local fromMacros = 0
+	if fromBook == 0 then
+	for _, macro in ipairs(ns.MacroList()) do
+		for _, block in ipairs(ns.Grammar.Parse(macro.body or "")) do
+			local kind = ns.Grammar.BlockArgKind(block)
+			if kind == "spell" or kind == "spells" or kind == "sequence" or kind == "subject" then
+				for _, clause in ipairs(block.clauses or {}) do
+					local text = ns.Grammar.Trim(clause.arg or ""):gsub("^[Rr][Ee][Ss][Ee][Tt]=%S+%s*", "")
+					for piece in text:gmatch("[^,]+") do
+						local name = ns.Grammar.StripRank(ns.Grammar.Trim(piece))
+						if name and name ~= "" and not tonumber(name) and not seen[strlower(name)] then
+							local real, icon = ns.SpellInfo(name)
+							if real then
+								fromMacros = fromMacros + 1
+								Add(real, icon)
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+		if fromMacros > 0 then ns.report["spells found in your own macros"] = fromMacros end
+
+		-- And the spells sitting on your action bars. A bar slot holding a macro says only that it
+		-- holds a macro, which is why the pass above reads the macros themselves.
+		local fromBars = 0
+		if GetActionInfo then
+			for slot = 1, 180 do
+				local ok, kind, id = pcall(GetActionInfo, slot)
+				if ok and Clean(kind) == "spell" and Clean(id) then
+					local name, icon = ns.SpellInfo(Clean(id))
+					if name and not seen[strlower(name)] then fromBars = fromBars + 1 end
+					Add(name, icon)
+				end
+			end
+		end
+		if fromBars > 0 then ns.report["spells found on your action bars"] = fromBars end
+	end
+
+	if fromBook > 0 then
 		ns.report["spellbook read"] = "from the spellbook"
+	elseif #out > 0 then
+		ns.report["spellbook read"] = "from your macros and action bars, the spellbook gave up nothing"
 	else
 		ns.report["spellbook read"] = "nothing this client would give up"
 	end
@@ -853,6 +924,8 @@ events:SetScript("OnEvent", function(_, event, arg1)
 	elseif event == "BAG_UPDATE_DELAYED" then
 		ns.ForgetLists("items")
 	elseif event == "UPDATE_MACROS" then
+		-- Your macros are one of the places the names come from, so a macro changing changes them.
+		ns.ForgetLists("spells")
 		if ns.UI and ns.UI.MacrosChanged then ns.UI:MacrosChanged() end
 	end
 end)

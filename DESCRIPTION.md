@@ -46,9 +46,10 @@ is still written out underneath, so nothing is hidden from you.
   stand is answered by the game rather than guessed at. Hold shift and watch it change.
 
 **Typing a spell finishes itself.** Two letters in and the names you actually have appear under the
-box: your spellbook for a cast, your bags and what you are wearing for a use. Click one, or press
-tab. What you end up with is matched against the game, with its icon, its id and its own tooltip, so
-a name that is nearly right is caught here and not in a fight.
+box: your spellbook for a cast, your bags and what you are wearing for a use, and what your pets can
+cast, including the pets you do not have out. Click one, or press tab. What you end up with is
+matched against the game, with its icon, its id and its own tooltip, so a name that is nearly right
+is caught here and not in a fight.
 
 **Templates and tutorials.** Sixty-seven macros to start from, a general chapter and one per class,
 each saying what it is for. Five tutorials build a real macro on the bench with your own spells, a
@@ -105,4 +106,5 @@ button starts a tutorial that builds one with you.
 | `/macrobench scan` | check every macro you have and list the broken ones |
 | `/macrobench confirm` | ask, or stop asking, before a macro slot is replaced |
 | `/macrobench minimap` | show or hide the minimap button |
+| `/macrobench pets` | what your pets have been seen to know (`pets forget` starts it over) |
 | `/macrobench debug` | what this client allowed |

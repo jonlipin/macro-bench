@@ -304,6 +304,14 @@ function ns.SpellBookList()
 	else
 		ns.report["spellbook read"] = "nothing this client would give up"
 	end
+	-- Every pet you have had out, not only the one standing beside you.
+	local fromPets = 0
+	for name, icon in pairs(ns.PetSpells()) do
+		if not seen[strlower(name)] then fromPets = fromPets + 1 end
+		Add(name, icon ~= true and icon or nil)
+	end
+	if fromPets > 0 then ns.report["spells your pets know"] = fromPets end
+
 	table.sort(out, function(a, b) return a.name < b.name end)
 	ns.report["spells for finishing a name"] = #out
 	-- Nothing found is not an answer worth keeping: it is asked again next time.
@@ -370,6 +378,50 @@ function ns.SpellApiReport()
 		end
 	end
 	return lines
+end
+
+-- ---- What your pets know -------------------------------------------
+-- A pet's spells are only in the spellbook while that pet is out, and on this client the spellbook
+-- gives up nothing anyway. The pet's own action bar does answer, so it is read whenever a pet is
+-- there and what it knew is kept: summon the Succubus once and Seduction can be finished from then
+-- on, with the Voidwalker out or no pet at all. Kept per character, since pets are.
+function ns.RememberPetSpells()
+	if not GetPetActionInfo then return 0 end
+	ns.db.pets = ns.db.pets or {}
+	local key = ns.CharKey()
+	ns.db.pets[key] = ns.db.pets[key] or {}
+	local store = ns.db.pets[key]
+	local added = 0
+	for i = 1, (NUM_PET_ACTION_SLOTS or 10) do
+		local ok, name, texture, isToken, _, _, _, spellID = pcall(GetPetActionInfo, i)
+		if ok then
+			name, texture, isToken, spellID = Clean(name), Clean(texture), Clean(isToken), Clean(spellID)
+			-- A token is Attack, Follow or Stay: a pet command, not a spell a macro would cast.
+			if name and name ~= "" and not isToken then
+				if spellID then
+					local realName, icon = ns.SpellInfo(spellID)
+					name, texture = realName or name, icon or texture
+				end
+				if store[name] == nil then added = added + 1 end
+				store[name] = texture or true
+			end
+		end
+	end
+	if added > 0 then
+		ns.ForgetLists("spells")
+		LogLine("remembered " .. added .. " pet spells")
+	end
+	return added
+end
+
+function ns.PetSpells()
+	local key = ns.CharKey()
+	return (ns.db.pets and ns.db.pets[key]) or {}
+end
+
+function ns.ForgetPetSpells()
+	if ns.db.pets then ns.db.pets[ns.CharKey()] = nil end
+	ns.ForgetLists("spells")
 end
 
 function ns.BagItemList()
@@ -904,6 +956,9 @@ Register("LEARNED_SPELL_IN_SKILL_LINE")
 Register("LEARNED_SPELL_IN_TAB")
 Register("BAG_UPDATE_DELAYED")
 Register("PLAYER_ENTERING_WORLD")
+Register("PET_BAR_UPDATE")
+Register("UNIT_PET")
+Register("PLAYER_PET_CHANGED")
 events:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" and arg1 == ADDON then
 		ns.InitDB()
@@ -917,8 +972,12 @@ events:SetScript("OnEvent", function(_, event, arg1)
 		ns.SaveBench()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		ns.ForgetLists()
+		ns.RememberPetSpells()
 		ns.SpellBookList()
 		ns.BagItemList()
+	elseif event == "PET_BAR_UPDATE" or event == "PLAYER_PET_CHANGED"
+		or (event == "UNIT_PET" and (arg1 == "player" or arg1 == nil)) then
+		ns.RememberPetSpells()
 	elseif event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_SKILL_LINE" or event == "LEARNED_SPELL_IN_TAB" then
 		ns.ForgetLists("spells")
 	elseif event == "BAG_UPDATE_DELAYED" then
@@ -977,6 +1036,20 @@ local function Command(input)
 	elseif cmd == "tutorials" and rest == "again" then
 		ns.db.offeredTutorial = nil
 		Print("The tutorials will offer themselves next time the bench is opened.")
+	elseif cmd == "pets" then
+		local known = ns.PetSpells()
+		local names = {}
+		for name in pairs(known) do names[#names + 1] = name end
+		table.sort(names)
+		if rest == "forget" then
+			ns.ForgetPetSpells()
+			Print("Forgotten. What your pets know is learned again the next time one is out.")
+		elseif #names == 0 then
+			Print("Nothing yet. Summon a pet and its spells are remembered, for finishing names with whether it is out or not.")
+		else
+			Print(#names .. " spells your pets know: " .. table.concat(names, ", "))
+			Print("|cffffd100/macrobench pets forget|r starts that over.")
+		end
 	elseif cmd == "confirm" then
 		ns.db.confirmOverwrite = not (ns.db.confirmOverwrite ~= false)
 		Print("Ask before a macro slot is replaced: " .. ns.YesNo(ns.db.confirmOverwrite ~= false))

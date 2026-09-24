@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.3
+
+- Finishing a name knows what your pets can cast, including the pets you do not have out. A pet is read the moment it is summoned and what it knows is kept per character, so once you have had the Succubus out, Seduction and Lash of Pain go on finishing themselves with the Voidwalker standing there instead. "/macrobench pets" lists what has been learned this way and "/macrobench pets forget" starts it over.
+
 ## 1.9.2
 
 - Backspacing a step box empty took the step away with it, keyboard and all. The boxes were drawn from the macro text, where an empty step is nothing at all, so the last letter deleted the row. The boxes keep their own shape while one of them has the keyboard: an empty box stays put and goes on taking letters, whether it is the one just added or one in the middle of the list. Only what is actually written reaches the macro, and when the keyboard leaves the empty ones fall away.

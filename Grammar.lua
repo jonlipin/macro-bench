@@ -3,7 +3,7 @@
 -- Everything in this addon turns on one rule: the macro TEXT is what is real. Blocks are a view of
 -- it. So this file holds one pair of functions, Parse and Compile, and they are each other's
 -- inverse: Compile(Parse(text)) gives the same macro back (whitespace normalised), for every macro,
--- including ones this addon does not understand. Anything unrecognised becomes a "raw" block that
+-- including ones this addon does not understand. Anything unrecognized becomes a "raw" block that
 -- compiles back out verbatim, so nothing a player pasted in can ever be lost by round-tripping.
 --
 -- A block is plain data (it goes into the saved variables as it stands):
@@ -129,7 +129,7 @@ local function ClientCommands()
 	if clientCmds then return clientCmds end
 	clientCmds = {}
 	local function AddToken(token)
-		-- SLASH_TOKEN1, SLASH_TOKEN2 ... hold the words, localised.
+		-- SLASH_TOKEN1, SLASH_TOKEN2 ... hold the words, localized.
 		for i = 1, 8 do
 			local word = _G["SLASH_" .. token .. i]
 			if not word then break end
@@ -190,7 +190,7 @@ Cond("pet", { label = "pet out", takes = "word" })
 Cond("party", { label = "the unit is in your party" })
 Cond("raid", { label = "the unit is in your raid" })
 Cond("group", { label = "in a group", takes = "word" })
-Cond("channeling", { label = "channelling", takes = "spell" })
+Cond("channeling", { label = "channeling", takes = "spell" })
 Cond("mounted", { label = "mounted" })
 Cond("swimming", { label = "swimming" })
 Cond("flying", { label = "flying" })

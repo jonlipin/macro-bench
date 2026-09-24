@@ -839,7 +839,7 @@ local function ProtoLook(proto)
 	if proto.part then
 		if proto.part == "otherwise" then return "", "otherwise", PART_LOOK.otherwise end
 		if proto.part == "or" then return "", "or", PART_LOOK["or"] end
-		-- In the list a condition block wears the range it covers, in grey: what it will say once it
+		-- In the list a condition block wears the range it covers, in gray: what it will say once it
 		-- is on a line is up to you, and one gold value there reads as the only thing it can be.
 		local words = proto.shows or (proto.seed and G.CondLabel(proto.seed)) or "anything"
 		return G.BUCKET_LABEL[proto.part] or "when", "|cffa0a0a0" .. words .. "|r", PART_LOOK.when
@@ -1258,7 +1258,7 @@ local STATE_VALUE = {
 	{ "pet", "Pet", "The pet's name or its kind: Succubus, Voidwalker, Felhunter, Imp. Empty with \"not\" ticked is [nopet], which is how you check you have none." },
 	{ "form", "Form or stance", "The number the game gives it: 1, 2, 3. Several with a slash, as 1/3. Also written stance: in older macros." },
 	{ "group", "Group", "party or raid." },
-	{ "channeling", "Channelling", "A spell's name, or empty for anything at all." },
+	{ "channeling", "Channeling", "A spell's name, or empty for anything at all." },
 	{ "equipped", "Equipped", "An item type or a slot: Shields, Daggers, Thrown, Wands, 16." },
 	{ "actionbar", "Action bar page", "1 to 6." },
 	{ "bonusbar", "Bonus bar", "1 to 5. The bar a form or a vehicle swaps in." },
@@ -3143,7 +3143,7 @@ local function BuildFooter()
 	newButton:SetPoint("RIGHT", keepButton, "LEFT", -5, 0)
 	newButton:SetScript("OnClick", function() UI:NewMacro() end)
 
-	-- How the macro stands, at a glance, without opening the check. It goes in the grey band the
+	-- How the macro stands, at a glance, without opening the check. It goes in the gray band the
 	-- window's own art puts along the bottom, where it has the whole width to itself rather than
 	-- whatever is left between the tick box and the buttons. That band is outside the inset, so it
 	-- is parented to the window and lifted above the border, which is a frame of its own here.

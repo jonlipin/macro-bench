@@ -40,7 +40,7 @@ Tut.LESSONS = {
 			  hint = "Dragging it onto the chain does the same thing, and lets you choose where it goes.",
 			  done = "^/cast" },
 			{ focus = "part", text = "The block is open in the panel underneath. Click into its box and type a spell you actually have: a heal if you have one, otherwise anything.",
-			  hint = "Under the box it tells you whether the game recognised the name, and hovering that shows the spell's own tooltip.",
+			  hint = "Under the box it tells you whether the game recognized the name, and hovering that shows the spell's own tooltip.",
 			  done = "^/cast%s+%a" },
 			{ focus = "palette:Target filter", text = "Now click the blue |cffffd100Target filter|r block in the parts list. It lands on the line aimed at your mouseover.",
 			  hint = "That is [@mouseover] in the macro text.",

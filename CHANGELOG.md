@@ -1,7 +1,12 @@
 # Changelog
 
-## 1.7.5
+## 1.8.0
 
+- The first packaged release. Everything 1.0 through 1.7 built: a macro as a chain of blocks with its text beside it, both live and either one editable; a control for every condition the game has; three checking passes, none of which run the macro; names finished as you type them from your own spellbook and bags; sixty-seven templates and five tutorials; and a library with no limit beside the game's own macro slots.
+- Spelled the way this client spells: it says Color, Center and Gray on its own frames, so the addon beside it says the same. Gray, color, center, recognized, localized, channeling. Identifiers are left alone.
+- Listing copy for an addon site kept with the addon, in DESCRIPTION.md, so the words on the page and the words in the window cannot drift apart.
+
+## 1.7.5
 - The window would not open: "stack overflow". Putting every single-line string through one helper in 1.7.4 rewrote the call inside the helper as well, so it called itself for ever. It sets the line count itself again.
 
 ## 1.7.4
@@ -15,7 +20,7 @@
 - A macro in the list did not read as one thing. What the slot is, "slot 1" or "yours", sat at the bottom right of its row, level with the next macro name down, so it looked like that one's. It is on the name's line now, the icon lines up with the name rather than floating in the middle of the row, each row has a rule of its own along the bottom instead of leaving a gap to do that work, and rows are six pixels taller.
 
 ## 1.7.1
-- The minimap button sat inside the ring the others are on. Its reach was a fixed 80 from the centre, which is right only for a minimap of the size the game ships; measured from the minimap own width plus six, as Aura Ledger measures it, the two now sit on one ring whatever size the minimap has been made. The icon moved to where the tracking border window is rather than the middle of the button, and it has the same dark backing behind it that the others have.
+- The minimap button sat inside the ring the others are on. Its reach was a fixed 80 from the center, which is right only for a minimap of the size the game ships; measured from the minimap own width plus six, as Aura Ledger measures it, the two now sit on one ring whatever size the minimap has been made. The icon moved to where the tracking border window is rather than the middle of the button, and it has the same dark backing behind it that the others have.
 - Dragging it works on a client without math.atan2, and the angle is kept between 0 and 360.
 
 ## 1.7.0
@@ -64,7 +69,7 @@
 ## 1.4.2
 
 - The ? in the title bar was not there to be clicked. The window border is a frame of its own on this client and draws above anything parented to the window at the usual level, so a button tucked into the corner went behind the corner art. It sits above the border now.
-- The check line moved to the grey band the window draws along its very bottom, where it has the whole width and no longer reads "nothing on t…" in the gap between the tick box and the buttons. Clicking it still opens the whole list, and hovering it still lists the first few findings.
+- The check line moved to the gray band the window draws along its very bottom, where it has the whole width and no longer reads "nothing on t…" in the gap between the tick box and the buttons. Clicking it still opens the whole list, and hovering it still lists the first few findings.
 - Two more ways to the same tutorials, since one that can be hidden is not enough: a Tutorial button on the macro header beside Macro text and Check, and a right-click on the minimap button.
 
 ## 1.4.1
@@ -88,11 +93,11 @@
 
 ## 1.2.1
 
-- A condition block in the parts list said "shift" or "on mouseover" in gold, which read as the only thing that block could ever say. It shows the range it covers instead, in grey, as shift, ctrl, alt…, and its tooltip lists what it can ask and says it arrives set to one of them.
+- A condition block in the parts list said "shift" or "on mouseover" in gold, which read as the only thing that block could ever say. It shows the range it covers instead, in gray, as shift, ctrl, alt…, and its tooltip lists what it can ask and says it arrives set to one of them.
 
 ## 1.2.0
 
-- The parts chapter shows the parts as the blocks they will become: the same frame, the same colours, the same two lines of words as on the bench, flowing across the page and wrapping rather than sitting in a list of rows. One function paints a block now, and the chain and the chapter both go through it, so a block in the list cannot drift from the block you drop.
+- The parts chapter shows the parts as the blocks they will become: the same frame, the same colors, the same two lines of words as on the bench, flowing across the page and wrapping rather than sitting in a list of rows. One function paints a block now, and the chain and the chapter both go through it, so a block in the list cannot drift from the block you drop.
 - The chain has its connectors back, and in words: an action is followed by "when" before its first condition, "and" between two conditions of the same set, "then" before what it casts, and a chevron where nothing else fits. They sit above the line plate rather than behind it.
 
 ## 1.1.3
@@ -111,7 +116,7 @@
 
 ## 1.1.0
 
-- Every condition the game has now has a control. The blocks that ask only yes or no are three-way buttons (not asked, must be true, must be false, and right-click goes round the other way), and the ones that take an answer have a box beside them: pet (Succubus, Voidwalker, or empty with "not" ticked, which is [nopet]), form or stance, group, channelling, equipped, action bar page, bonus bar, mouse button, spell known.
+- Every condition the game has now has a control. The blocks that ask only yes or no are three-way buttons (not asked, must be true, must be false, and right-click goes round the other way), and the ones that take an answer have a box beside them: pet (Succubus, Voidwalker, or empty with "not" ticked, which is [nopet]), form or stance, group, channeling, equipped, action bar page, bonus bar, mouse button, spell known.
 - Under the controls, every condition block carries the whole of itself written out as the game reads it. A condition with no control of its own, the handful that only exist in later expansions, is shown there and can be edited, rather than being invisible.
 - The aimed-at block gives the units their own row, with a box for anybody by name, and asks whether the unit is an enemy, friendly, there at all, dead, in your party, in your raid, or in a vehicle.
 - The panel scrolls, because the state block holds more than fits in it.

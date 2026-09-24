@@ -66,7 +66,7 @@ Findings are listed worst first under the bench. Click one to jump to the line i
 - **Keep in the library** keeps the macro here, inside the addon. There is no limit: build and keep as many as you like, on any character.
 - **Save to a macro slot** writes it into one of the game's own macro slots, which is what makes it a real macro. The game will not allow that during a fight, so it is queued and goes in the moment the fight ends.
 - **Put on cursor** picks the saved macro up so you can drop it on an action bar. The drop has to be your own click: no addon may place something on a bar for you.
-- The **icon** is taken from the first spell or item the macro names, the way the game does it. Click it for the plain question mark instead.
+- The **icon** is chosen by clicking it: a grid of every icon a macro may wear, your own spells and items first, searchable by name. Without a choice it is the first spell or item the macro names, the way the game does it, and a right-click goes back to that.
 - **this character only** decides which set of slots it goes in: the account shares one set, each character has a few of its own. The counts are on the "In the game" heading under My macros.
 
 ## What a macro cannot do

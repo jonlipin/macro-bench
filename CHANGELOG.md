@@ -1,7 +1,12 @@
 # Changelog
 
-## 1.8.1
+## 1.8.2
 
+- The icon beside the name opens a picker: every icon a macro may wear, sixty at a time, your own spells and items at the front and the game's whole list behind them. The ones with names can be searched. It had only ever toggled between working the icon out and the plain question mark, which is not what clicking an icon looks like it should do. Right-click still goes back to working it out.
+- Finishing a spell name found nothing while items worked. Reading the spellbook asked for the banks by name through an Enum this client may not have, and skipped the whole thing when it was missing. They are asked for by number as well now. Failing everything, the spells on your action bars stand in, which are the ones you write macros about anyway.
+- "/macrobench debug spells" says which of the spellbook calls this client has, what each one answered, and how many spells came back, so an empty list explains itself.
+
+## 1.8.1
 - The tutorials offer themselves the first time the bench is opened with nothing on it and nothing kept, which is what a fresh install looks like. Once only, a moment behind the window so they arrive on top of it. The ? beside the close button, the Tutorial button and a right-click on the minimap button bring them back after that, and "/macrobench tutorials again" makes them offer themselves once more.
 
 ## 1.8.0

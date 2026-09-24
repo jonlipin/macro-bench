@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.8.1"
+ns.VERSION = "1.8.2"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -162,9 +162,18 @@ function ns.SpellBookList()
 	end
 	-- Which call gives up the name moves about between clients: the info table has it on some, only
 	-- an id on others, and a call of its own elsewhere. All of them are tried for every entry.
+	-- The banks are asked for by number as well as by name, because a client that has the spellbook
+	-- calls but not the Enum for them would otherwise be skipped entirely.
 	local book = C_SpellBook
-	if book and book.GetNumSpellBookItems and Enum and Enum.SpellBookSpellBank then
-		for _, bank in ipairs({ Enum.SpellBookSpellBank.Player, Enum.SpellBookSpellBank.Pet }) do
+	local banks = {}
+	if Enum and Enum.SpellBookSpellBank then
+		banks[#banks + 1] = Enum.SpellBookSpellBank.Player
+		banks[#banks + 1] = Enum.SpellBookSpellBank.Pet
+	else
+		banks[1], banks[2], banks[3] = 0, 1, 2
+	end
+	if book and book.GetNumSpellBookItems then
+		for _, bank in ipairs(banks) do
 			local ok, num = pcall(book.GetNumSpellBookItems, bank)
 			num = (ok and Clean(num)) or 0
 			for i = 1, num do
@@ -208,10 +217,87 @@ function ns.SpellBookList()
 			if ok then Add(name, icon) end
 		end
 	end
+	-- Nothing from the spellbook at all: this client keeps it somewhere none of the above reaches.
+	-- The spells on your action bars are the ones you write macros about anyway, so they stand in.
+	if #out == 0 and GetActionInfo then
+		for slot = 1, 180 do
+			local ok, kind, id = pcall(GetActionInfo, slot)
+			if ok and Clean(kind) == "spell" and Clean(id) then
+				local name, icon = ns.SpellInfo(Clean(id))
+				Add(name, icon)
+			end
+		end
+		if #out > 0 then ns.report["spellbook read"] = "from the action bars" end
+	elseif #out > 0 then
+		ns.report["spellbook read"] = "from the spellbook"
+	else
+		ns.report["spellbook read"] = "nothing this client would give up"
+	end
 	table.sort(out, function(a, b) return a.name < b.name end)
 	ns.report["spells for finishing a name"] = #out
 	spellCache = out
 	return out
+end
+
+-- Every icon a macro is allowed to wear. Yours first, since an icon you already use is the one you
+-- are most likely to want, then the whole list the game keeps for macros.
+local iconCache
+function ns.IconChoices()
+	if iconCache then return iconCache end
+	local out, seen = {}, {}
+	local function Add(icon, name)
+		icon = Clean(icon)
+		if not icon or icon == "" or seen[tostring(icon)] then return end
+		seen[tostring(icon)] = true
+		out[#out + 1] = { icon = icon, name = Clean(name) }
+	end
+	for _, entry in ipairs(ns.SpellBookList()) do Add(entry.icon, entry.name) end
+	for _, entry in ipairs(ns.BagItemList()) do Add(entry.icon, entry.name) end
+	local list = {}
+	if GetMacroIcons then pcall(GetMacroIcons, list) end
+	if GetMacroItemIcons then pcall(GetMacroItemIcons, list) end
+	if #list == 0 and GetNumMacroIcons and GetMacroIconInfo then
+		local ok, num = pcall(GetNumMacroIcons)
+		for i = 1, (ok and Clean(num)) or 0 do
+			local okIcon, icon = pcall(GetMacroIconInfo, i)
+			if okIcon then list[#list + 1] = Clean(icon) end
+		end
+	end
+	for _, icon in ipairs(list) do Add(icon) end
+	Add(ns.QUESTION, "Question mark")
+	ns.report["icons to choose from"] = #out
+	iconCache = out
+	return out
+end
+
+-- The name an icon can be searched by: a spell's or item's if it came from one, otherwise whatever
+-- the game calls the file. A file id is a number and has no name to search.
+function ns.IconName(entry)
+	if entry.name then return entry.name end
+	if type(entry.icon) == "string" then return (entry.icon:match("([^\\/]+)$") or entry.icon) end
+	return nil
+end
+
+-- What this client actually has, for working out why a list came back empty.
+function ns.SpellApiReport()
+	local function Has(path, fn) return path .. ": " .. ((type(fn) == "function" or type(fn) == "table") and "yes" or "no") end
+	local lines = {
+		Has("C_SpellBook", C_SpellBook),
+		Has("C_SpellBook.GetNumSpellBookItems", C_SpellBook and C_SpellBook.GetNumSpellBookItems),
+		Has("C_SpellBook.GetSpellBookItemInfo", C_SpellBook and C_SpellBook.GetSpellBookItemInfo),
+		Has("C_SpellBook.GetSpellBookItemName", C_SpellBook and C_SpellBook.GetSpellBookItemName),
+		Has("Enum.SpellBookSpellBank", Enum and Enum.SpellBookSpellBank),
+		Has("GetNumSpellTabs", GetNumSpellTabs),
+		Has("GetSpellBookItemName", GetSpellBookItemName),
+		Has("GetActionInfo", GetActionInfo),
+	}
+	if C_SpellBook and C_SpellBook.GetNumSpellBookItems then
+		for _, bank in ipairs({ 0, 1, 2 }) do
+			local ok, num = pcall(C_SpellBook.GetNumSpellBookItems, bank)
+			lines[#lines + 1] = ("GetNumSpellBookItems(%d): %s"):format(bank, ok and tostring(Clean(num)) or "refused")
+		end
+	end
+	return lines
 end
 
 function ns.BagItemList()
@@ -821,6 +907,13 @@ local function Command(input)
 		ns.db.minimap = not ns.db.minimap
 		ns.UI:UpdateMinimapButton()
 		Print("Minimap button: " .. ns.YesNo(ns.db.minimap))
+	elseif cmd == "debug" and rest == "spells" then
+		Print("what this client has for reading the spellbook:")
+		for _, line in ipairs(ns.SpellApiReport()) do Print("  " .. line) end
+		ns.ForgetLists("spells")
+		local list = ns.SpellBookList()
+		Print("spells found: " .. #list)
+		for i = 1, math.min(5, #list) do Print("  " .. list[i].name) end
 	elseif cmd == "debug" then
 		Print("Macro Bench " .. ns.VERSION)
 		local a, c = ns.MacroCaps()

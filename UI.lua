@@ -3049,6 +3049,140 @@ function UI:PasteMacro()
 	ns.Print("Press |cffffd100ctrl+V|r to paste a macro in. The chain builds itself from whatever arrives.")
 end
 
+-- ---- Choosing the icon ---------------------------------------------
+-- A page of icons at a time rather than all of them at once: the game keeps thousands, and a frame
+-- for each would cost more than the whole rest of the window. Sixty buttons are refilled as the
+-- page moves, which is how the game's own macro window does it.
+local ICON_COLS, ICON_ROWS = 10, 6
+local iconPicker
+
+local function BuildIconPicker()
+	local p = CreateWindow("MacroBenchIconFrame", "The macro's icon", 420, 360)
+	p.offset, p.search = 0, ""
+	local body = p.body
+
+	local auto = MakeButton(body, "Work it out", 104,
+		"Use the first spell or item the macro names, which is what the game does with a macro that has not been given an icon.")
+	auto:SetHeight(20)
+	auto:SetPoint("TOPLEFT", 4, -2)
+	auto:SetScript("OnClick", function()
+		ns.bench.icon, ns.bench.plainIcon = nil, nil
+		ns.bench.dirty = true
+		UI:RefreshFooter()
+		p:Hide()
+	end)
+
+	local searchBox = CreateFrame("EditBox", nil, body, "InputBoxTemplate")
+	searchBox:SetSize(200, 20)
+	searchBox:SetPoint("LEFT", auto, "RIGHT", 16, 0)
+	searchBox:SetAutoFocus(false)
+	searchBox:SetScript("OnTextChanged", function(self, userInput)
+		if not userInput then return end
+		p.search = self:GetText()
+		p.offset = 0
+		p:Fill()
+	end)
+	searchBox:SetScript("OnEscapePressed", function(self)
+		self:SetText("")
+		p.search = ""
+		self:ClearFocus()
+		p:Fill()
+	end)
+	searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+	searchBox:SetScript("OnEnter", function(self)
+		TextTooltip(self, "Search", "Looks through the icons of your own spells and items by name. The rest of the game's icons are files with no name to look through.")
+	end)
+	searchBox:SetScript("OnLeave", HideTooltip)
+
+	p.count = body:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	p.count:SetPoint("BOTTOMLEFT", 6, 4)
+
+	p.buttons = {}
+	for i = 1, ICON_COLS * ICON_ROWS do
+		local b = CreateFrame("Button", nil, body)
+		b:SetSize(32, 32)
+		b:SetPoint("TOPLEFT", 6 + ((i - 1) % ICON_COLS) * 36, -28 - floor((i - 1) / ICON_COLS) * 36)
+		b.icon = TrimIcon(b:CreateTexture(nil, "ARTWORK"))
+		b.icon:SetAllPoints()
+		b.outline = Outline(b)
+		b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+		b:SetScript("OnClick", function(self)
+			if not self.value then return end
+			ns.bench.icon, ns.bench.plainIcon = self.value, nil
+			ns.bench.dirty = true
+			UI:RefreshFooter()
+			p:Hide()
+		end)
+		b:SetScript("OnEnter", function(self)
+			if not self.value then return end
+			TextTooltip(self, self.label or "This icon", "Click to give the macro this icon.")
+		end)
+		b:SetScript("OnLeave", HideTooltip)
+		p.buttons[i] = b
+	end
+
+	body:EnableMouseWheel(true)
+	body:SetScript("OnMouseWheel", function(_, delta)
+		local per = ICON_COLS * ICON_ROWS
+		p.offset = max(0, min(p.offset - delta * ICON_COLS, max(0, (p.total or 0) - per)))
+		p:Fill()
+	end)
+
+	function p:Fill()
+		local all = ns.IconChoices()
+		local query = strlower(G.Trim(self.search or ""))
+		local shown = all
+		if query ~= "" then
+			shown = {}
+			for _, entry in ipairs(all) do
+				local name = ns.IconName(entry)
+				if name and strlower(name):find(query, 1, true) then shown[#shown + 1] = entry end
+			end
+		end
+		self.total = #shown
+		local per = ICON_COLS * ICON_ROWS
+		self.offset = max(0, min(self.offset, max(0, self.total - per)))
+		local current = ns.BenchIcon()
+		for i, b in ipairs(self.buttons) do
+			local entry = shown[self.offset + i]
+			if entry then
+				b.value = entry.icon
+				b.label = ns.IconName(entry)
+				b.icon:SetTexture(entry.icon)
+				b:Show()
+				if tostring(entry.icon) == tostring(current) then
+					b.outline:Set(1, 0.82, 0, 1)
+				else
+					b.outline:Set(0.28, 0.26, 0.2, 1)
+				end
+			else
+				b.value = nil
+				b:Hide()
+			end
+		end
+		self.count:SetText(format("%d to %d of %d. Turn the wheel for more.",
+			self.total > 0 and self.offset + 1 or 0, min(self.offset + per, self.total), self.total))
+	end
+
+	iconPicker = p
+	return p
+end
+
+function UI:ShowIconPicker()
+	local p = iconPicker or BuildIconPicker()
+	if p:IsShown() then
+		p:Hide()
+		return
+	end
+	if not p.placed then
+		p:ClearAllPoints()
+		p:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 8, 0)
+		p.placed = true
+	end
+	p:Show()
+	p:Fill()
+end
+
 function UI:ToggleWindow(w)
 	if not w then return end
 	if w:IsShown() then
@@ -3079,13 +3213,20 @@ local function BuildFooter()
 	iconButton.icon = TrimIcon(iconButton:CreateTexture(nil, "ARTWORK"))
 	iconButton.icon:SetAllPoints()
 	iconButton:SetScript("OnEnter", function(self)
-		TextTooltip(self, "The icon", "Taken from the first spell or item the macro names, the way the game does it. Click for the plain question mark instead.")
+		TextTooltip(self, "The icon",
+			"Click to choose one. Without a choice it is the first spell or item the macro names, the way the game does it.",
+			"Right-click to go back to working it out.")
 	end)
 	iconButton:SetScript("OnLeave", HideTooltip)
-	iconButton:SetScript("OnClick", function()
-		ns.bench.plainIcon = not ns.bench.plainIcon
-		ns.bench.dirty = true
-		UI:RefreshFooter()
+	iconButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	iconButton:SetScript("OnClick", function(_, button)
+		if button == "RightButton" then
+			ns.bench.icon, ns.bench.plainIcon = nil, nil
+			ns.bench.dirty = true
+			UI:RefreshFooter()
+		else
+			UI:ShowIconPicker()
+		end
 	end)
 
 	local nameLabel = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")

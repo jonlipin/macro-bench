@@ -87,7 +87,8 @@ Built for the WoW: Forever client, from Blizzard's own interface art.
    ctrl+V: anything you paste is read into the chain.
 8. Watch the check along the bottom. Click it for the whole list, and click a finding to jump to the
    line it is about.
-9. Name it at the bottom, then **Save to a macro slot**, and **Put on cursor** to drop it on a bar.
+9. Click the icon beside the name to choose one: every icon a macro may wear, your own spells and items first, searchable. Right-click it to go back to working it out.
+10. Name it at the bottom, then **Save to a macro slot**, and **Put on cursor** to drop it on a bar.
    Or **Keep here**, which puts it in the addon's own library where there is no limit.
 
 The first time you open it on a fresh install the tutorials offer themselves. After that: the **?** beside the close button, the **Tutorial** button, or a right-click on the minimap

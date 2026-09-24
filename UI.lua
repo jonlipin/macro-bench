@@ -1423,7 +1423,11 @@ end
 local function UnitRow(parent, y, width)
 	local row = CreateFrame("Frame", nil, parent)
 	row:SetPoint("TOPLEFT", 0, y)
-	row:SetSize(width, 46)
+	-- Its width is the panel's, not a number picked in advance: a number wider than the panel puts
+	-- whatever sits at the far end of the row off the side of the window, which is where the box for
+	-- a name had been.
+	row:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
+	row:SetHeight(70)
 	row.buttons = {}
 	local function SetUnit(term)
 		local keep = {}
@@ -1436,7 +1440,7 @@ local function UnitRow(parent, y, width)
 	for i, def in ipairs(TARGET_UNITS) do
 		local b = CreateCheck(row)
 		b:SetSize(20, 20)
-		b:SetPoint("TOPLEFT", ((i - 1) % 4) * 200, -floor((i - 1) / 4) * 22)
+		b:SetPoint("TOPLEFT", ((i - 1) % 4) * 190, -floor((i - 1) / 4) * 22)
 		local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		fs:SetPoint("LEFT", b, "RIGHT", 1, 0)
 		fs:SetText(def[2])
@@ -1445,11 +1449,11 @@ local function UnitRow(parent, y, width)
 		row.buttons[#row.buttons + 1] = b
 	end
 	row.nameLabel = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	row.nameLabel:SetPoint("TOPLEFT", 800, -2)
-	row.nameLabel:SetText("or a name")
+	row.nameLabel:SetPoint("TOPLEFT", 2, -50)
+	row.nameLabel:SetText("or somebody by name")
 	row.name = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
-	row.name:SetSize(130, 20)
-	row.name:SetPoint("TOPLEFT", 810, -20)
+	row.name:SetSize(160, 20)
+	row.name:SetPoint("LEFT", row.nameLabel, "RIGHT", 14, 0)
 	row.name:SetAutoFocus(false)
 	row.name:SetScript("OnEnterPressed", function(self)
 		local text = G.Trim(self:GetText())
@@ -1573,14 +1577,14 @@ local function CreateEditors(host, scroll)
 	local unitLabel = target:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	unitLabel:SetPoint("TOPLEFT", 0, 0)
 	unitLabel:SetText("Aimed at")
-	target.rows[#target.rows + 1] = UnitRow(target, -18, 960)
+	target.rows[#target.rows + 1] = UnitRow(target, -18)
 	local stateLabel = target:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	stateLabel:SetPoint("TOPLEFT", 0, -68)
+	stateLabel:SetPoint("TOPLEFT", 0, -94)
 	stateLabel:SetText("and it is")
-	local tri, triH = TriGrid(target, TARGET_TRI, 4, 200, -86)
+	local tri, triH = TriGrid(target, TARGET_TRI, 4, 190, -112)
 	for _, b in ipairs(tri) do target.rows[#target.rows + 1] = b end
-	target.rows[#target.rows + 1] = RawRow(target, -90 - triH, 560, "target")
-	Place(target, 140 + triH)
+	target.rows[#target.rows + 1] = RawRow(target, -116 - triH, 560, "target")
+	Place(target, 166 + triH)
 	function target:Sync()
 		local text = G.BucketText(SelCond(), "target")
 		for _, row in ipairs(self.rows) do row:Sync(text) end
@@ -1590,14 +1594,14 @@ local function CreateEditors(host, scroll)
 	-- ---- only when --------------------------------------------------
 	local state = CreateFrame("Frame", nil, host)
 	state.rows = {}
-	local stri, stateH = TriGrid(state, STATE_TRI, 4, 215, 0)
+	local stri, stateH = TriGrid(state, STATE_TRI, 4, 205, 0)
 	for _, b in ipairs(stri) do state.rows[#state.rows + 1] = b end
 	local valueLabel = state:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	valueLabel:SetPoint("TOPLEFT", 0, -stateH - 8)
 	valueLabel:SetText("and these take an answer")
 	for i, def in ipairs(STATE_VALUE) do
 		state.rows[#state.rows + 1] = ValueRow(state, def,
-			((i - 1) % 2) * 440, -stateH - 30 - floor((i - 1) / 2) * 24, 430)
+			((i - 1) % 2) * 415, -stateH - 30 - floor((i - 1) / 2) * 24, 405)
 	end
 	local valueH = ceil(#STATE_VALUE / 2) * 24
 	state.rows[#state.rows + 1] = RawRow(state, -stateH - 36 - valueH, 560, "state")
@@ -2013,8 +2017,14 @@ function UI:RefreshResolve()
 	local action, target = V.Resolve(b)
 	local text
 	if action == nil then text = ""
-	elseif action == false then text = "|cff888888As things stand, this line does nothing.|r"
-	else text = "|cff7fd4ffAs things stand: " .. tostring(action) .. (target and (" on " .. tostring(target)) or "") .. "|r" end
+	elseif action == false then
+		-- Not a fault with the line: it is what the line would do if it were pressed this instant.
+		-- A mouseover macro says this whenever the mouse is not over anything, which it is not while
+		-- you are working in this window.
+		text = "|cff9d9d9dIf you pressed it this instant: nothing, as none of its conditions apply right now.|r"
+	else
+		text = "|cff7fd4ffIf you pressed it this instant: " .. tostring(action) .. (target and (" on " .. tostring(target)) or "") .. "|r"
+	end
 	partPane.note:SetText(text)
 	if editors.arg:IsShown() then editors.arg.resolve:SetText(text) end
 end

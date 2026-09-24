@@ -1,7 +1,11 @@
 # Changelog
 
-## 1.8.4
+## 1.8.5
 
+- "As things stand, this line does nothing" read as a verdict on the macro when it is only what the line would do if it were pressed that instant: a mouseover macro says it whenever the mouse is not over anything, which it is not while you are working in this window. It says "If you pressed it this instant" now, and nothing found says why.
+- The aimed at block ran off the side of the window: its row was laid out at a width picked in advance, wider than the panel it sits in, which put the box for a name past the edge. The row is the width of the panel now, the units are four across in the room there is, and the name has a line of its own under them. The state block was measured the same way and given a little back.
+
+## 1.8.4
 - Finishing a name found Rain of Fire but not Shadow Bolt, Life Tap but not Fear. This client gives up nothing from its spellbook, so the names were coming from your action bars, and a bar slot holding a macro says only that it holds a macro: every spell you keep inside one was invisible. Your own macros are read now, with the addon's own parser, so every spell named in one is a name you can finish. Your bars are read beside them, and a macro changing reads them again.
 - When the spellbook answers with a count of nothing but still knows the entries themselves, they are asked for one at a time until they run out.
 

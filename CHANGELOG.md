@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.9.0
+## 1.9.1
 
+- The names on offer are a dropdown, so they are drawn over what is under them rather than tangled with it: opaque, bordered, above everything else in the panel, and the width of the box they belong to. Under a step box they had been sharing their place with the Add a step button.
+
+## 1.9.0
 - Cast in order and Cast one at random have an editor built for a list: a box per step, numbered, with arrows to move a step up or down and a cross to take it out, and a button to add another. Names finish themselves in every one of those boxes the way they do everywhere else.
 - For a sequence the reset is asked for in words rather than written into the same string: tick when you leave combat, when you change target, or give it a number of seconds. Anything else a reset can say is kept as it was.
 

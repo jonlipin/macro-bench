@@ -675,6 +675,53 @@ function G.BlockSubject(b)
 	return nil
 end
 
+-- ---- A list argument: a sequence, or several to pick from at random ----
+-- "reset=combat A, B" is a reset and a list of steps, not one string. These take it apart and put
+-- it back, so the window can offer a box per step rather than one box holding commas.
+function G.SplitSteps(arg)
+	arg = Trim(arg or "")
+	local reset = arg:match("^[Rr][Ee][Ss][Ee][Tt]=(%S+)")
+	if reset then arg = Trim(arg:sub(#reset + 7)) end
+	local steps = {}
+	for piece in arg:gmatch("[^,]+") do
+		piece = Trim(piece)
+		if piece ~= "" then steps[#steps + 1] = piece end
+	end
+	return reset, steps
+end
+
+function G.JoinSteps(reset, steps)
+	local body = concat(steps or {}, ", ")
+	reset = Trim(reset or "")
+	if reset ~= "" then
+		return "reset=" .. reset .. (body ~= "" and (" " .. body) or "")
+	end
+	return body
+end
+
+-- The reset broken into what it asks for: seconds, combat, target, and anything else left as it is.
+function G.SplitReset(reset)
+	local out = { others = {} }
+	for piece in tostring(reset or ""):gmatch("[^/]+") do
+		piece = Trim(piece)
+		local lower = strlower(piece)
+		if tonumber(piece) then out.seconds = piece
+		elseif lower == "combat" then out.combat = true
+		elseif lower == "target" then out.target = true
+		else out.others[#out.others + 1] = piece end
+	end
+	return out
+end
+
+function G.JoinReset(parts)
+	local list = {}
+	if parts.seconds and Trim(parts.seconds) ~= "" then list[#list + 1] = Trim(parts.seconds) end
+	if parts.combat then list[#list + 1] = "combat" end
+	if parts.target then list[#list + 1] = "target" end
+	for _, other in ipairs(parts.others or {}) do list[#list + 1] = other end
+	return concat(list, "/")
+end
+
 -- Strips "(Rank 3)" so a spell can be looked up by name. Only a rank: plenty of spells have
 -- brackets of their own ("Faerie Fire (Feral)"), and taking those off would look up the wrong spell.
 function G.StripRank(name)

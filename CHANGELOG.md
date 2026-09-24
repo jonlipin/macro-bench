@@ -1,7 +1,11 @@
 # Changelog
 
-## 1.8.5
+## 1.9.0
 
+- Cast in order and Cast one at random have an editor built for a list: a box per step, numbered, with arrows to move a step up or down and a cross to take it out, and a button to add another. Names finish themselves in every one of those boxes the way they do everywhere else.
+- For a sequence the reset is asked for in words rather than written into the same string: tick when you leave combat, when you change target, or give it a number of seconds. Anything else a reset can say is kept as it was.
+
+## 1.8.5
 - "As things stand, this line does nothing" read as a verdict on the macro when it is only what the line would do if it were pressed that instant: a mouseover macro says it whenever the mouse is not over anything, which it is not while you are working in this window. It says "If you pressed it this instant" now, and nothing found says why.
 - The aimed at block ran off the side of the window: its row was laid out at a width picked in advance, wider than the panel it sits in, which put the box for a name past the edge. The row is the width of the panel now, the units are four across in the room there is, and the name has a line of its own under them. The state block was measured the same way and given a little back.
 

@@ -1191,10 +1191,10 @@ end
 local ARG_HINT = {
 	spell = "The spell's name, exactly as the spellbook writes it. Drop one in from the spellbook and it fills itself in.",
 	subject = "Leave it empty and the game works out what to show. Or name a spell, an item, or a slot number: 13 and 14 are your trinkets.",
-	sequence = "The steps, separated by commas. Begin with reset=combat, reset=target or a number of seconds to say when it goes back to the first.",
-	spells = "Several spells, separated by commas.",
+	sequence = "One step per box, cast in order, one per press. Say below when it goes back to the first.",
+	spells = "One per box. Each press casts one of them at random.",
 	item = "The item's name, a bag and slot (\"1 3\"), or a slot number: 13 and 14 are trinkets, 16 the main hand.",
-	items = "Several items, separated by commas.",
+	items = "One per box. Each press uses one of them at random.",
 	slotitem = "The slot number first, then the item: \"16 Thunderfury\".",
 	unit = "A unit the game knows (player, target, mouseover, focus, party1…) or somebody's name.",
 	number = "A number.",
@@ -1887,6 +1887,258 @@ local function CreateEditors(host, scroll)
 	end
 	E.arg = arg
 
+	-- ---- a list of steps: a sequence, or several to pick from --------
+	-- A box per step rather than one box full of commas. Steps can be added, taken out and moved,
+	-- and the reset is asked for in words rather than written into the same string.
+	local steps = CreateFrame("Frame", nil, host)
+	Place(steps, 240)
+	steps.rows = {}
+
+	local function StepsOf()
+		local s = UI.sel
+		local b = s and Block(s.block)
+		if not b then return nil, {} end
+		local cl = Clause(s.block, s.clause or 1)
+		return G.SplitSteps(cl and cl.arg or "")
+	end
+
+	local function WriteSteps(reset, list)
+		local s = UI.sel
+		if not s then return end
+		UI:SetArg(s.clause or 1, G.JoinSteps(reset, list))
+	end
+
+	local resetLabel = steps:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	resetLabel:SetPoint("TOPLEFT", 0, 0)
+	resetLabel:SetText("Back to the first when")
+	steps.resetLabel = resetLabel
+
+	local function ResetToggle(term, label, x)
+		local b = CreateCheck(steps)
+		b:SetSize(20, 20)
+		b:SetPoint("TOPLEFT", x, 16)
+		local fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		fs:SetPoint("LEFT", b, "RIGHT", 1, 0)
+		fs:SetText(label)
+		b:SetScript("OnClick", function(self)
+			local reset, list = StepsOf()
+			local parts = G.SplitReset(reset)
+			parts[term] = self:GetChecked() and true or nil
+			WriteSteps(G.JoinReset(parts), list)
+		end)
+		return b
+	end
+	steps.combat = ResetToggle("combat", "you leave combat", 150)
+	steps.target = ResetToggle("target", "you change target", 330)
+
+	local secondsLabel = steps:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	secondsLabel:SetPoint("TOPLEFT", 520, 20)
+	secondsLabel:SetText("or after")
+	steps.seconds = CreateFrame("EditBox", nil, steps, "InputBoxTemplate")
+	steps.seconds:SetSize(44, 20)
+	steps.seconds:SetPoint("LEFT", secondsLabel, "RIGHT", 12, 0)
+	steps.seconds:SetAutoFocus(false)
+	steps.seconds:SetNumeric(true)
+	steps.seconds:SetScript("OnTextChanged", function(self, userInput)
+		if not userInput then return end
+		local reset, list = StepsOf()
+		local parts = G.SplitReset(reset)
+		parts.seconds = G.Trim(self:GetText())
+		WriteSteps(G.JoinReset(parts), list)
+	end)
+	steps.seconds:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+	steps.seconds:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	steps.secondsLabel = secondsLabel
+	local secondsAfter = steps:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	secondsAfter:SetPoint("LEFT", steps.seconds, "RIGHT", 8, 0)
+	secondsAfter:SetText("seconds")
+	steps.secondsAfter = secondsAfter
+
+	local function StepRow(index)
+		local row = steps.rows[index]
+		if row then return row end
+		row = CreateFrame("Frame", nil, steps)
+		row:SetHeight(22)
+		row.number = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+		row.number:SetPoint("LEFT", 0, 0)
+		row.number:SetWidth(20)
+		row.number:SetJustifyH("RIGHT")
+		row.box = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+		row.box:SetSize(360, 20)
+		row.box:SetPoint("LEFT", row.number, "RIGHT", 12, 0)
+		row.box:SetAutoFocus(false)
+		row.box.index = index
+		row.box:SetScript("OnTextChanged", function(self, userInput)
+			if not userInput then return end
+			local reset, list = StepsOf()
+			list[self.index] = self:GetText()
+			if G.Trim(self:GetText()) ~= "" then steps.extra = nil end
+			WriteSteps(reset, list)
+			steps:Offer(self)
+		end)
+		row.box:SetScript("OnEditFocusGained", function(self) steps:Offer(self) end)
+		row.box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+		row.box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+		row.box:SetScript("OnTabPressed", function(self) steps:Accept(steps.first) end)
+		row.box:SetScript("OnReceiveDrag", function() UI:DropOnLine(UI.sel and UI.sel.block) end)
+
+		row.up = MakeButton(row, "^", 22, "Move this step one earlier.")
+		row.up:SetHeight(20)
+		row.up:SetPoint("LEFT", row.box, "RIGHT", 8, 0)
+		row.up:SetScript("OnClick", function()
+			local reset, list = StepsOf()
+			if index > 1 then
+				list[index], list[index - 1] = list[index - 1], list[index]
+				WriteSteps(reset, list)
+			end
+		end)
+		row.down = MakeButton(row, "v", 22, "Move this step one later.")
+		row.down:SetHeight(20)
+		row.down:SetPoint("LEFT", row.up, "RIGHT", 2, 0)
+		row.down:SetScript("OnClick", function()
+			local reset, list = StepsOf()
+			if index < #list then
+				list[index], list[index + 1] = list[index + 1], list[index]
+				WriteSteps(reset, list)
+			end
+		end)
+		row.del = CreateFrame("Button", nil, row)
+		row.del:SetSize(18, 18)
+		row.del:SetPoint("LEFT", row.down, "RIGHT", 6, 0)
+		row.del:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+		row.del:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+		row.del:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+		row.del:SetScript("OnClick", function()
+			local reset, list = StepsOf()
+			table.remove(list, index)
+			WriteSteps(reset, list)
+		end)
+		row.del:SetScript("OnEnter", function(self) TextTooltip(self, "Take this step out") end)
+		row.del:SetScript("OnLeave", HideTooltip)
+		steps.rows[index] = row
+		return row
+	end
+
+	steps.add = MakeButton(steps, "Add a step", 100, "Another spell at the end of the list.")
+	steps.add:SetHeight(20)
+	steps.add:SetScript("OnClick", function()
+		local reset, list = StepsOf()
+		steps.extra = true
+		steps:Sync()
+		local row = steps.rows[#list + 1]
+		if row then row.box:SetFocus() end
+	end)
+
+	-- One strip of names for whichever step box has the keyboard.
+	steps.suggestions = {}
+	for i = 1, 5 do
+		local row = CreateFrame("Button", nil, steps)
+		row:SetSize(300, 18)
+		row.bg = Plate(row, 0.12, 0.12, 0.12, 0.7)
+		row:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+		row.icon = TrimIcon(row:CreateTexture(nil, "ARTWORK"))
+		row.icon:SetSize(16, 16)
+		row.icon:SetPoint("LEFT", 3, 0)
+		row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		row.text:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
+		row.text:SetPoint("RIGHT", -4, 0)
+		row.text:SetJustifyH("LEFT")
+		OneLine(row.text)
+		row:SetScript("OnClick", function(self) steps:Accept(self.value) end)
+		row:Hide()
+		steps.suggestions[i] = row
+	end
+
+	function steps:Accept(name)
+		local box = self.activeBox
+		if not name or not box then return end
+		local reset, list = StepsOf()
+		list[box.index] = name
+		WriteSteps(reset, list)
+		local row = self.rows[box.index]
+		if row then
+			row.box:SetText(name)
+			row.box:SetCursorPosition(#name)
+			row.box:SetFocus()
+		end
+		self:Offer(row and row.box)
+	end
+
+	function steps:Offer(box)
+		self.activeBox = box
+		local found = {}
+		if box and box:HasFocus() then
+			local b = UI.sel and Block(UI.sel.block)
+			local kind = b and G.BlockArgKind(b) or "spell"
+			found = ns.Suggest(box:GetText(), kind == "items" and "item" or "spell", #self.suggestions)
+		end
+		for i, row in ipairs(self.suggestions) do
+			local entry = found[i]
+			if entry then
+				row.value = entry.name
+				row.icon:SetTexture(entry.icon or ns.QUESTION)
+				row.text:SetText(entry.name)
+				row:ClearAllPoints()
+				row:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -2 - (i - 1) * 18)
+				row:Show()
+			else
+				row.value = nil
+				row:Hide()
+			end
+		end
+		self.first = found[1] and found[1].name or nil
+	end
+
+	function steps:Sync()
+		local s = UI.sel
+		local b = s and Block(s.block)
+		local kind = b and G.BlockArgKind(b) or "sequence"
+		local reset, list = StepsOf()
+		local sequence = kind == "sequence"
+		self.resetLabel:SetShown(sequence)
+		self.combat:SetShown(sequence)
+		self.target:SetShown(sequence)
+		self.seconds:SetShown(sequence)
+		self.secondsLabel:SetShown(sequence)
+		self.secondsAfter:SetShown(sequence)
+		if sequence then
+			local parts = G.SplitReset(reset)
+			self.combat:SetChecked(parts.combat and true or false)
+			self.target:SetChecked(parts.target and true or false)
+			if not self.seconds:HasFocus() then self.seconds:SetText(parts.seconds or "") end
+		end
+		-- A block opened afresh never starts with an empty row hanging off the end of somebody
+		-- else's list.
+		if self.lastBlock ~= (s and s.block) or self.lastClause ~= (s and s.clause) then
+			self.extra = nil
+			self.lastBlock, self.lastClause = s and s.block, s and s.clause
+		end
+		local rows = max(#list + (self.extra and 1 or 0), 1)
+		local top = sequence and -44 or -4
+		for i = 1, rows do
+			local row = StepRow(i)
+			row:ClearAllPoints()
+			row:SetPoint("TOPLEFT", 0, top - (i - 1) * 24)
+			row:SetPoint("RIGHT", self, "RIGHT", -8, 0)
+			row.number:SetText(i .. ".")
+			row.box.index = i
+			if not row.box:HasFocus() then row.box:SetText(list[i] or "") end
+			row.up:SetShown(i > 1)
+			row.down:SetShown(i < #list)
+			row.del:SetShown(#list > 0)
+			row:Show()
+		end
+		for i = rows + 1, #self.rows do self.rows[i]:Hide() end
+		self.add:ClearAllPoints()
+		self.add:SetPoint("TOPLEFT", 32, top - rows * 24 - 4)
+		-- As tall as it needs to be, plus room for the names it may offer.
+		local height = -top + rows * 24 + 30 + 100
+		self:SetHeight(height)
+		self.h = height
+		self:Offer(self.activeBox and self.activeBox:HasFocus() and self.activeBox or nil)
+	end
+	E.steps = steps
+
 	-- ---- "+" and the separators -------------------------------------
 	local add = CreateFrame("Frame", nil, host)
 	Place(add, 64)
@@ -1957,7 +2209,9 @@ function UI:RefreshPart()
 	local wanted
 	if b then
 		if s.kind == "action" then wanted = editors.action
-		elseif s.kind == "arg" then wanted = editors.arg
+		elseif s.kind == "arg" then
+			local kind = G.BlockArgKind(b)
+			wanted = (kind == "sequence" or kind == "spells" or kind == "items") and editors.steps or editors.arg
 		elseif s.kind == "add" then wanted = editors.add
 		elseif s.kind == "otherwise" or s.kind == "or" then wanted = editors.sep
 		elseif s.kind == "when" then

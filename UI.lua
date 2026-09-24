@@ -3282,6 +3282,21 @@ function UI:Show()
 	end
 	frame:Show()
 	self:Refresh()
+	-- The tutorials offer themselves once, the first time the bench is opened with nothing on it and
+	-- nothing kept, which is what a fresh install looks like. After that the ? brings them back.
+	-- A moment behind the window, so they arrive on top of it rather than under it.
+	if not ns.db.offeredTutorial then
+		ns.db.offeredTutorial = true
+		if ns.BenchLength() == 0 and #ns.Drafts() == 0 and not ns.bench.slot then
+			if C_Timer and C_Timer.After then
+				C_Timer.After(0.25, function()
+					if frame and frame:IsShown() then ns.Tutorial:Show() end
+				end)
+			else
+				ns.Tutorial:Show()
+			end
+		end
+	end
 end
 
 function UI:Hide()

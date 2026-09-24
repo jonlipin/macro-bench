@@ -90,7 +90,7 @@ Built for the WoW: Forever client, from Blizzard's own interface art.
 9. Name it at the bottom, then **Save to a macro slot**, and **Put on cursor** to drop it on a bar.
    Or **Keep here**, which puts it in the addon's own library where there is no limit.
 
-Stuck? The **?** beside the close button, the **Tutorial** button, or a right-click on the minimap
+The first time you open it on a fresh install the tutorials offer themselves. After that: the **?** beside the close button, the **Tutorial** button, or a right-click on the minimap
 button starts a tutorial that builds one with you.
 
 ### Commands

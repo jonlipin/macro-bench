@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.8.0"
+ns.VERSION = "1.8.1"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -811,6 +811,9 @@ local function Command(input)
 		ns.Tutorial:Toggle()
 	elseif cmd == "scan" then
 		ns.Validate.ScanAll()
+	elseif cmd == "tutorials" and rest == "again" then
+		ns.db.offeredTutorial = nil
+		Print("The tutorials will offer themselves next time the bench is opened.")
 	elseif cmd == "confirm" then
 		ns.db.confirmOverwrite = not (ns.db.confirmOverwrite ~= false)
 		Print("Ask before a macro slot is replaced: " .. ns.YesNo(ns.db.confirmOverwrite ~= false))

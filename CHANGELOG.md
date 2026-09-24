@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.8.0
+## 1.8.1
 
+- The tutorials offer themselves the first time the bench is opened with nothing on it and nothing kept, which is what a fresh install looks like. Once only, a moment behind the window so they arrive on top of it. The ? beside the close button, the Tutorial button and a right-click on the minimap button bring them back after that, and "/macrobench tutorials again" makes them offer themselves once more.
+
+## 1.8.0
 - The first packaged release. Everything 1.0 through 1.7 built: a macro as a chain of blocks with its text beside it, both live and either one editable; a control for every condition the game has; three checking passes, none of which run the macro; names finished as you type them from your own spellbook and bags; sixty-seven templates and five tutorials; and a library with no limit beside the game's own macro slots.
 - Spelled the way this client spells: it says Color, Center and Gray on its own frames, so the addon beside it says the same. Gray, color, center, recognized, localized, channeling. Identifiers are left alone.
 - Listing copy for an addon site kept with the addon, in DESCRIPTION.md, so the words on the page and the words in the window cannot drift apart.

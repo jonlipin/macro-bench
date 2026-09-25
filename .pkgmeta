@@ -1,8 +1,8 @@
 package-as: MacroBench
 
 ignore:
-  - package.ps1
   - DESCRIPTION.md
+  - package.ps1
 
 manual-changelog:
   filename: CHANGELOG.md

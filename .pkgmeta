@@ -1,0 +1,9 @@
+package-as: MacroBench
+
+ignore:
+  - package.ps1
+  - DESCRIPTION.md
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown

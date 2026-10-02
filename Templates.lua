@@ -122,7 +122,7 @@ T.PALETTE = {
 -- ------------------------------------------------------------------
 local function Chapter(token, list) T[token] = list end
 
-T.CHAPTERS = { "GENERAL", "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
+T.CHAPTERS = { "GENERAL", "SCRIPTS", "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }
 
 Chapter("GENERAL", {
 	{ name = "Heal whatever you point at", why = "Heals your mouseover if it is friendly and alive, otherwise your target, otherwise you. The one macro most healers build first.",
@@ -151,6 +151,39 @@ Chapter("GENERAL", {
 	  text = "#showtooltip\n/run SetRaidTarget(\"target\", 8)" },
 	{ name = "Enemy nameplates on or off", why = "Shows what a script block is for: one line of Lua, no spell involved, and it works out of combat where scripts are allowed to.",
 	  text = "/run local n=\"nameplateShowEnemies\" local g=C_CVar and C_CVar.GetCVar or GetCVar local s=C_CVar and C_CVar.SetCVar or SetCVar s(n,g(n)==\"1\" and 0 or 1)" },
+})
+
+-- Script macros. These are a chapter of their own because what they do has nothing to do with your
+-- class and everything to do with the client: they reach for a function the game exposes and call
+-- it, which is the only way to do a few of these things at all. Every one is a single /run line,
+-- checked for syntax before it is saved like any other script.
+Chapter("SCRIPTS", {
+	{ name = "Get out of an instance", icon = PAPER, why = "Invites somebody who is not there, then leaves the party a second later. Changing the instance group while you are standing inside it is what ports you out, so this is a way back to the world with your hearthstone still on cooldown. If a real player happens to be named aa they will see an invite they can ignore.",
+	  text = '/run local i = InviteUnit or C_PartyInfo.InviteUnit i("aa");C_Timer.After(1,function() LeaveParty() end)' },
+	{ name = "Invite whoever you point at", icon = PAPER, why = "Reads the name under your mouse, or your target when the mouse is on nothing, and both invites them and asks to join them. One of the two always fails depending on who is already in a group, which is the point: you do not have to know which way round it is.",
+	  text = '/run local u=UnitExists("mouseover") and "mouseover" or "target"; if UnitIsPlayer(u) then local n,r=UnitName(u); local p=(r and r~="") and n.."-"..r or n; C_PartyInfo.InviteUnit(p); C_PartyInfo.RequestInviteFromUnit(p); end' },
+	{ name = "Sell every grey in your bags", icon = ITEM, why = "Walks all five bags and sells anything whose link carries the grey colour code, so it can only ever touch junk. The vendor window has to be open. The bag functions were moved into C_Container on newer clients, so it asks there first and falls back to the old globals.",
+	  text = '/run local c=C_Container or _G for b=0,4 do for s=1,c.GetContainerNumSlots(b) do local l=c.GetContainerItemLink(b,s) if l and l:find("ff9d9d9d") then c.UseContainerItem(b,s) end end end' },
+	{ name = "Repair everything", icon = SWORD, why = "At any vendor who repairs. There is no slash command for this one, which is the only reason it needs a script.",
+	  text = "/run RepairAllItems()" },
+	{ name = "Hide the whole interface", icon = PAPER, why = "For a screenshot. Put this on a key rather than a bar button: once the interface is gone the button is gone with it, and the key is the only way back.",
+	  text = "/run if UIParent:IsShown() then UIParent:Hide() else UIParent:Show() end" },
+	{ name = "Clear the red error text", icon = PAPER, why = "Wipes whatever is sat in the middle of your screen telling you something is not ready yet, without waiting for it to fade.",
+	  text = "/run UIErrorsFrame:Clear()" },
+	{ name = "Stop the red error text, or allow it again", icon = PAPER, why = "Turns off the errors entirely while you are spamming a key, and the same press turns them back on. The frame remembers which way it is until you reload.",
+	  text = '/run local f=UIErrorsFrame if f.mbQuiet then f:RegisterEvent("UI_ERROR_MESSAGE") f.mbQuiet=nil else f:UnregisterEvent("UI_ERROR_MESSAGE") f.mbQuiet=true end' },
+	{ name = "Accept a summon", icon = PAPER, why = "Takes the summon and closes the box, so you do not have to find it among whatever else is on screen. Nothing happens if there is no summon waiting.",
+	  text = '/run ConfirmSummon() StaticPopup_Hide("CONFIRM_SUMMON")' },
+	{ name = "Take the resurrection", icon = PAPER, why = "Accepts a resurrection and closes the box behind it, both the timed kind and the one with no sickness.",
+	  text = '/run AcceptResurrect() StaticPopup_Hide("RESURRECT_NO_TIMER") StaticPopup_Hide("RESURRECT_NO_SICKNESS")' },
+	{ name = "Release your spirit", icon = PAPER, why = "The same as clicking release on the box, for when you would rather not aim at it.",
+	  text = "/run RepopMe()" },
+	{ name = "Reset your instances", icon = PAPER, why = "Resets every instance you are saved to. You have to be outside them, and the leader if you are in a group.",
+	  text = "/run ResetInstances()" },
+	{ name = "Hand leadership to whoever you point at", icon = PAPER, why = "Promotes your mouseover, so you can pass the group over without opening anything. Asks C_PartyInfo first and the old global second.",
+	  text = '/run (C_PartyInfo and C_PartyInfo.PromoteToLeader or PromoteToLeader)("mouseover")' },
+	{ name = "Turn the party into a raid", icon = PAPER, why = "Converts a five man group into a raid so more can come in. You have to be the leader.",
+	  text = "/run (C_PartyInfo and C_PartyInfo.ConvertToRaid or ConvertToRaid)()" },
 })
 
 Chapter("WARRIOR", {
@@ -292,7 +325,7 @@ Chapter("DRUID", {
 -- nine classes are one chapter with a row of class icons in it rather than nine tabs, which is what
 -- lets the tabs sit in a single row and the page underneath be as wide as it is.
 function T.Order()
-	return { "BLOCKS", "MINE", "GENERAL", "CLASSES" }
+	return { "BLOCKS", "MINE", "GENERAL", "SCRIPTS", "CLASSES" }
 end
 
 -- Your own class first, then the rest, for the row of icons inside the Classes chapter.
@@ -301,7 +334,7 @@ function T.ClassOrder()
 	local order = {}
 	if mine and T[mine] then order[#order + 1] = mine end
 	for _, token in ipairs(T.CHAPTERS) do
-		if token ~= "GENERAL" and token ~= mine then order[#order + 1] = token end
+		if token ~= "GENERAL" and token ~= "SCRIPTS" and token ~= mine then order[#order + 1] = token end
 	end
 	return order
 end
@@ -311,6 +344,7 @@ function T.Label(token)
 	if token == "MINE" then return "My macros" end
 	if token == "BLOCKS" then return "Parts" end
 	if token == "GENERAL" then return "General" end
+	if token == "SCRIPTS" then return "Scripts" end
 	if token == "CLASSES" then return "Classes" end
 	return (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[token]) or (token:sub(1, 1) .. token:sub(2):lower())
 end

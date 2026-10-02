@@ -1,0 +1,9 @@
+{
+  "name": "macrobench-tools",
+  "private": true,
+  "description": "Offline checks for the addon: Lua 5.1 syntax, upvalue limits, use-before-declared, and a VM to run the addon's own parser against.",
+  "dependencies": {
+    "fengari": "^0.1.4",
+    "luaparse": "^0.3.1"
+  }
+}

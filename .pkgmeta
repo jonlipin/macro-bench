@@ -4,6 +4,7 @@ ignore:
   - DESCRIPTION.md
   - package.ps1
   - tests
+  - tools
 
 manual-changelog:
   filename: RELEASE-NOTES.md

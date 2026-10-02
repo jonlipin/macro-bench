@@ -51,7 +51,8 @@ cast, including the pets you do not have out. Click one, or press tab. What you 
 matched against the game, with its icon, its id and its own tooltip, so a name that is nearly right
 is caught here and not in a fight.
 
-**Templates and tutorials.** Sixty-seven macros to start from, a general chapter and one per class,
+**Templates and tutorials.** Eighty macros to start from: a general chapter, a chapter of script
+macros for the things only a script can do, and one chapter per class,
 each saying what it is for. Five tutorials build a real macro on the bench with your own spells, a
 step at a time, pulsing a ring round the block being talked about and moving on by itself when the
 bench says the step is done.

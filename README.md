@@ -27,7 +27,8 @@ The left panel is laid out like the spellbook and borrows its tab art when the c
 
 - **My macros** is everything you have kept here, followed by every macro in the game's own macro slots. Click one to put it on the bench. The red X forgets a draft; your macro slots are never touched by it.
 - **Parts** is what a macro is built from, drawn as the blocks they become and flowing across the page. A block that cannot be used yet is dimmed: a condition needs a line to belong to, so before anything is on the bench only the actions can start one: the actions (casting, using, targeting, stopping, pet orders, gear, chat, script) and the condition blocks (Modifier, Target filter, My state, Otherwise). Drag one onto the chain, or click it to add it.
-- **General** and then a chapter **per class**, your own class first, are whole macros to start from. Each says what it is for, and every one of them passes the check with nothing to report.
+- **General**, then **Scripts**, then a chapter **per class** with your own class first, are whole macros to start from. Each says what it is for, and every one of them passes the check with nothing to report.
+- **Scripts** holds the macros that are a single line of Lua, because a script is the only way to do what they do: get out of an instance, sell your greys at a vendor, repair, hide the interface for a screenshot, take a summon or a resurrection, reset your instances, hand leadership over.
 - **Search** looks through every chapter and every block at once, by name, by what the macro does, or by the text inside it.
 
 ## The bench

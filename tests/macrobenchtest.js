@@ -29,6 +29,10 @@ function Frame:Show() self.shown = true end
 function Frame:Hide() self.shown = false end
 function Frame:IsShown() return self.shown end
 function Frame:GetEffectiveScale() return 1 end
+-- These have to hand back something, since the addon keeps hold of what they return and goes on
+-- to set textures and text on it.
+function Frame:CreateTexture() return CreateFrame("Texture") end
+function Frame:CreateFontString() return CreateFrame("FontString") end
 function CreateFrame(kind, name)
   local f = setmetatable({ scripts = {}, events = {}, name = name }, Frame)
   T.frames[#T.frames + 1] = f
@@ -36,6 +40,8 @@ function CreateFrame(kind, name)
   return f
 end
 UIParent = CreateFrame("Frame", "UIParent")
+-- The minimap button hangs off this one, so the minimap has to exist before it can be built.
+Minimap = CreateFrame("Frame", "Minimap")
 function T.fire(e, ...)
   for _, f in ipairs(T.frames) do if f.events[e] and f.scripts.OnEvent then f.scripts.OnEvent(f, e, ...) end end
 end
@@ -142,6 +148,22 @@ run('pets and pets forget still reach their branch', `
   MB("pets") check(T.said("Nothing yet") or T.said("spells your pets know"), "pets answers")
   check(T.tutorial.toggled == 0, "pets toggles nothing")
   MB("pets forget") check(T.said("Forgotten."), "pets forget answers")
+`);
+
+run('the minimap button can be switched off, from the box or the command', `
+  check(NS.db.minimap == true, "it starts shown")
+  check(type(NS.UI.ToggleSettings) == "function", "there is a settings window to open")
+  check(type(NS.UI.RefreshSettings) == "function", "and a way to put its tick box back in step")
+  -- Called here before the window has ever been built, which is the state it is in after a login
+  -- when the command is used and the bench has not been opened.
+  NS.UI:RefreshSettings()
+  check(true, "putting the box in step before it exists does nothing rather than erroring")
+  MB("minimap")
+  check(NS.db.minimap == false, "the command hides it")
+  check(T.said("Minimap button: "), "and says which way it went")
+  MB("minimap")
+  check(NS.db.minimap == true, "and brings it back")
+  check(_G.MacroBenchMinimapButton ~= nil, "the button itself was built")
 `);
 
 console.log(`\n${pass} checks passed, ${fail} scenario${fail === 1 ? '' : 's'} failed`);

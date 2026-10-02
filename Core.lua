@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.9.4"
+ns.VERSION = "1.10.0"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -1059,6 +1059,9 @@ local function Command(input)
 	elseif cmd == "minimap" then
 		ns.db.minimap = not ns.db.minimap
 		ns.UI:UpdateMinimapButton()
+		-- The settings window has a tick box for this, so keep it in step when the command is the
+		-- one that changed it.
+		if ns.UI.RefreshSettings then ns.UI:RefreshSettings() end
 		Print("Minimap button: " .. ns.YesNo(ns.db.minimap))
 	elseif cmd == "debug" and rest == "spells" then
 		Print("what this client has for reading the spellbook:")

@@ -32,6 +32,7 @@ local strlower, format = string.lower, string.format
 local G, V, T
 local frame, body, bookPane, chainPane, partPane
 local textWindow, checkWindow, checkNote, checkStatus
+local settingsWindow, minimapCheck
 local bookList, checkList
 local chainScroll, chainContent, chainEmpty, linkHost
 local partScroll, partContent
@@ -2875,6 +2876,55 @@ end
 -- ------------------------------------------------------------------
 -- Build
 -- ------------------------------------------------------------------
+-- A small button for the title bar, beside the close button.
+--
+-- Built the way Aura Ledger builds its own, which is known to come out visible on this client: a
+-- plain button that takes its strata and its level from the close button beside it rather than from
+-- the window, and that wears the client's own red button art, with a bordered box and then a plain
+-- fill as fallbacks. A templated button parented to the window went behind the border.
+local function TitleBarButton(parent)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(24, 22)
+
+	local plate = "none"
+	for _, atlas in ipairs({ "RedButton", "UI-RedButton" }) do
+		if HasAtlas(atlas) and b.SetNormalAtlas then
+			b:SetNormalAtlas(atlas)
+			if HasAtlas(atlas .. "-Pressed") and b.SetPushedAtlas then b:SetPushedAtlas(atlas .. "-Pressed") end
+			plate = atlas
+			break
+		end
+	end
+	if plate == "none" then
+		local okb, box = pcall(CreateFrame, "Frame", nil, b, "BackdropTemplate")
+		if okb and box and box.SetBackdrop then
+			box:SetPoint("TOPLEFT", 1, -1)
+			box:SetPoint("BOTTOMRIGHT", -1, 1)
+			box:SetBackdrop({
+				bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+				tile = true, tileSize = 8, edgeSize = 8,
+				insets = { left = 2, right = 2, top = 2, bottom = 2 },
+			})
+			box:SetBackdropColor(0.35, 0.05, 0.05, 1)
+			box:SetBackdropBorderColor(1, 0.82, 0)
+			plate = "bordered box"
+		else
+			local fill = b:CreateTexture(nil, "BACKGROUND")
+			fill:SetPoint("TOPLEFT", 1, -1)
+			fill:SetPoint("BOTTOMRIGHT", -1, 1)
+			fill:SetColorTexture(0.35, 0.05, 0.05, 1)
+			plate = "plain fill"
+		end
+	end
+	if HasAtlas("RedButton-Highlight") and b.SetHighlightAtlas then
+		b:SetHighlightAtlas("RedButton-Highlight")
+	else
+		b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+	end
+	return b, plate
+end
+
 local function BuildFrame()
 	G, V, T = ns.Grammar, ns.Validate, ns.Templates
 	parts, plates, links, palette, palHeads, partButtons = {}, {}, {}, {}, {}, {}
@@ -2943,47 +2993,11 @@ local function BuildFrame()
 	end
 
 	-- Up beside the close button, where a question mark belongs.
-	-- Built the way Aura Ledger builds its own, which is known to come out visible on this client:
-	-- a plain button that takes its strata and its level from the close button beside it rather than
-	-- from the window, and that wears the client's own red button art, with a bordered box and then
-	-- a plain fill as fallbacks. A templated button parented to the window went behind the border.
-	local help = CreateFrame("Button", nil, frame)
-	help:SetSize(24, 22)
+	local help, plate = TitleBarButton(frame)
 	if frame.CloseButton then
 		help:SetPoint("RIGHT", frame.CloseButton, "LEFT", 0, 0)
 	else
 		help:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -30, -2)
-	end
-	local plate = "none"
-	for _, atlas in ipairs({ "RedButton", "UI-RedButton" }) do
-		if HasAtlas(atlas) and help.SetNormalAtlas then
-			help:SetNormalAtlas(atlas)
-			if HasAtlas(atlas .. "-Pressed") and help.SetPushedAtlas then help:SetPushedAtlas(atlas .. "-Pressed") end
-			plate = atlas
-			break
-		end
-	end
-	if plate == "none" then
-		local okb, box = pcall(CreateFrame, "Frame", nil, help, "BackdropTemplate")
-		if okb and box and box.SetBackdrop then
-			box:SetPoint("TOPLEFT", 1, -1)
-			box:SetPoint("BOTTOMRIGHT", -1, 1)
-			box:SetBackdrop({
-				bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-				edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-				tile = true, tileSize = 8, edgeSize = 8,
-				insets = { left = 2, right = 2, top = 2, bottom = 2 },
-			})
-			box:SetBackdropColor(0.35, 0.05, 0.05, 1)
-			box:SetBackdropBorderColor(1, 0.82, 0)
-			plate = "bordered box"
-		else
-			local fill = help:CreateTexture(nil, "BACKGROUND")
-			fill:SetPoint("TOPLEFT", 1, -1)
-			fill:SetPoint("BOTTOMRIGHT", -1, 1)
-			fill:SetColorTexture(0.35, 0.05, 0.05, 1)
-			plate = "plain fill"
-		end
 	end
 	ns.report["help button plate"] = plate
 	local qmark = help:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -2992,11 +3006,6 @@ local function BuildFrame()
 	qmark:SetTextColor(1, 0.92, 0.4)
 	qmark:SetShadowColor(0, 0, 0, 1)
 	qmark:SetShadowOffset(1, -1)
-	if HasAtlas("RedButton-Highlight") and help.SetHighlightAtlas then
-		help:SetHighlightAtlas("RedButton-Highlight")
-	else
-		help:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
-	end
 	help:SetScript("OnClick", function() ns.Tutorial:Toggle() end)
 	help:SetScript("OnEnter", function(self)
 		TextTooltip(self, "Tutorials", "Five macros built a step at a time, on this bench, with your own spells. It can be left at any point, and this button brings it back.")
@@ -3004,6 +3013,22 @@ local function BuildFrame()
 	help:SetScript("OnLeave", HideTooltip)
 	UI.corners[#UI.corners + 1] = help
 	UI.focus.help = help
+
+	-- And a cog beside it, for the handful of choices that belong to the addon rather than to the
+	-- macro on the bench. The footer is all per macro, so the minimap button had nowhere to live.
+	local cog = TitleBarButton(frame)
+	cog:SetPoint("RIGHT", help, "LEFT", 0, 0)
+	local gear = cog:CreateTexture(nil, "OVERLAY")
+	gear:SetSize(15, 15)
+	gear:SetPoint("CENTER")
+	gear:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+	cog:SetScript("OnClick", function() UI:ToggleSettings() end)
+	cog:SetScript("OnEnter", function(self)
+		TextTooltip(self, "Settings", "The minimap button, and anything else that is about the addon rather than about one macro.")
+	end)
+	cog:SetScript("OnLeave", HideTooltip)
+	UI.corners[#UI.corners + 1] = cog
+	UI.focus.settings = cog
 
 	local hasBand = frameTemplate == "ButtonFrameTemplate"
 	body = CreateFrame("Frame", nil, frame)
@@ -3486,6 +3511,57 @@ function UI:ShowIconPicker()
 	end
 	p:Show()
 	p:Fill()
+end
+
+-- ------------------------------------------------------------------
+-- Settings
+--
+-- One small window for the choices that are about the addon rather than about the macro on the
+-- bench. Everything in the footer belongs to the macro being built, so the minimap button had
+-- nowhere to be switched off except a chat command, which is not somewhere anyone looks.
+-- ------------------------------------------------------------------
+local function BuildSettings()
+	local w = CreateWindow("MacroBenchSettingsFrame", "Settings", 300, 116)
+
+	local intro = w.body:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	intro:SetPoint("TOPLEFT", 4, -4)
+	intro:SetPoint("TOPRIGHT", -4, -4)
+	intro:SetJustifyH("LEFT")
+	intro:SetText("Choices that belong to the addon rather than to one macro.")
+
+	minimapCheck = CreateCheck(w.body)
+	minimapCheck:SetSize(24, 24)
+	minimapCheck:SetPoint("TOPLEFT", intro, "BOTTOMLEFT", 0, -12)
+	local label = w.body:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	label:SetPoint("LEFT", minimapCheck, "RIGHT", 2, 0)
+	label:SetText("Show the minimap button")
+	minimapCheck:SetScript("OnClick", function(self)
+		ns.db.minimap = self:GetChecked() and true or false
+		UI:UpdateMinimapButton()
+		if not ns.db.minimap then
+			ns.Print("Minimap button hidden. /macrobench opens the bench, and /macrobench minimap brings the button back.")
+		end
+	end)
+	minimapCheck:SetScript("OnEnter", function(self)
+		TextTooltip(self, "The minimap button",
+			"Left-click it to open the bench, right-click it for the tutorials, drag it round the rim to move it.",
+			"With this unticked the button is gone and /macrobench opens the bench instead.")
+	end)
+	minimapCheck:SetScript("OnLeave", HideTooltip)
+
+	settingsWindow = w
+	return w
+end
+
+-- Called whenever the window opens and after the chat command changes a setting behind its back.
+function UI:RefreshSettings()
+	if minimapCheck then minimapCheck:SetChecked(ns.db.minimap and true or false) end
+end
+
+function UI:ToggleSettings()
+	local w = settingsWindow or BuildSettings()
+	self:RefreshSettings()
+	self:ToggleWindow(w)
 end
 
 function UI:ToggleWindow(w)

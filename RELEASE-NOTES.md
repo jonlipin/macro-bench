@@ -1,4 +1,3 @@
-## 1.9.4 - 2026-10-02
+## 1.10.0 - 2026-10-02
 
-- "/macrobench tutorials again" never ran: plain "/macrobench tutorials" was matched first and opened the tutorials instead. It is matched first now, and it does what it says even with macros already kept, where the tutorials used to wait for an empty bench before offering themselves. Plain "/macrobench tutorials" still opens and closes them.
-- The list of commands that "/macrobench" prints includes "/macrobench pets" and "pets forget".
+- The minimap button can be switched off from a tick box. There is a cog next to the question mark at the top of the bench, and it opens a small Settings window with "Show the minimap button" in it. Until now the only way to hide the button was "/macrobench minimap", which is not somewhere anyone would think to look. The command still works, and the box keeps up with it.

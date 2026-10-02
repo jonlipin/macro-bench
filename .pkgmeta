@@ -3,6 +3,7 @@ package-as: MacroBench
 ignore:
   - DESCRIPTION.md
   - package.ps1
+  - tests
 
 manual-changelog:
   filename: RELEASE-NOTES.md

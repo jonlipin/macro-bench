@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.9.2"
+ns.VERSION = "1.9.4"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -999,6 +999,7 @@ local function Usage()
 	Print("  |cffffd100/macrobench load <name>|r put one of your game macros on the bench")
 	Print("  |cffffd100/macrobench tutorial|r a macro built a step at a time, with your own spells")
 	Print("  |cffffd100/macrobench scan|r check every macro you have and list the broken ones")
+	Print("  |cffffd100/macrobench pets|r what your pets know, for finishing names; |cffffd100pets forget|r starts it over")
 	Print("  |cffffd100/macrobench confirm|r ask, or stop asking, before a macro slot is replaced")
 	Print("  |cffffd100/macrobench minimap|r show or hide the minimap button")
 	Print("  |cffffd100/macrobench debug|r what this client allowed")
@@ -1029,13 +1030,15 @@ local function Command(input)
 		ns.UI:Show()
 		ns.UI:Refresh()
 		Print("Loaded " .. m.name .. " onto the bench.")
+	-- Before the plain word, which would otherwise take this too.
+	elseif cmd == "tutorials" and rest == "again" then
+		ns.db.offeredTutorial = nil
+		ns.db.offerTutorialAgain = true
+		Print("The tutorials will offer themselves next time the bench is opened.")
 	elseif cmd == "tutorial" or cmd == "tutorials" or cmd == "help" then
 		ns.Tutorial:Toggle()
 	elseif cmd == "scan" then
 		ns.Validate.ScanAll()
-	elseif cmd == "tutorials" and rest == "again" then
-		ns.db.offeredTutorial = nil
-		Print("The tutorials will offer themselves next time the bench is opened.")
 	elseif cmd == "pets" then
 		local known = ns.PetSpells()
 		local names = {}

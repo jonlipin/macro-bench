@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.4 - 2026-10-02
+
+- "/macrobench tutorials again" never ran: plain "/macrobench tutorials" was matched first and opened the tutorials instead. It is matched first now, and it does what it says even with macros already kept, where the tutorials used to wait for an empty bench before offering themselves. Plain "/macrobench tutorials" still opens and closes them.
+- The list of commands that "/macrobench" prints includes "/macrobench pets" and "pets forget".
+
 ## 1.9.3
 
 - Finishing a name knows what your pets can cast, including the pets you do not have out. A pet is read the moment it is summoned and what it knows is kept per character, so once you have had the Succubus out, Seduction and Lash of Pain go on finishing themselves with the Voidwalker standing there instead. "/macrobench pets" lists what has been learned this way and "/macrobench pets forget" starts it over.

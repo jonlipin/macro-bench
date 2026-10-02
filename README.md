@@ -84,6 +84,7 @@ None of this is Macro Bench being careful; it is the game.
 | --- | --- |
 | `/macrobench` | open or close the bench (`/mbench` and `/mb` work too) |
 | `/macrobench tutorial` | open the tutorials |
+| `/macrobench tutorials again` | have the tutorials offer themselves once more, the next time the bench is opened |
 | `/macrobench check` | check what is on the bench and print the findings |
 | `/macrobench load <name>` | put one of your game macros on the bench |
 | `/macrobench scan` | check every macro you have and list the broken ones |
@@ -91,3 +92,7 @@ None of this is Macro Bench being careful; it is the game.
 | `/macrobench minimap` | show or hide the minimap button |
 | `/macrobench pets` | what your pets have been seen to know (`pets forget` starts it over) |
 | `/macrobench debug` | what this client allowed |
+
+## Tests
+
+`tests/macrobenchtest.js` loads Core.lua, Grammar.lua and UI.lua into [fengari](https://github.com/fengari-lua/fengari) against a stubbed client and drives the slash command: the help list, the tutorial commands, and the tutorials offering themselves. With fengari on the module path (`npm install fengari`), run `node tests/macrobenchtest.js`; `--verbose` prints what the addon put in the chat frame.

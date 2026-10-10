@@ -162,7 +162,7 @@ Chapter("SCRIPTS", {
 	  text = '/run local i = InviteUnit or C_PartyInfo.InviteUnit i("aa");C_Timer.After(1,function() LeaveParty() end)' },
 	{ name = "Invite whoever you point at", icon = PAPER, why = "Reads the name under your mouse, or your target when the mouse is on nothing, and both invites them and asks to join them. One of the two always fails depending on who is already in a group, which is the point: you do not have to know which way round it is.",
 	  text = '/run local u=UnitExists("mouseover") and "mouseover" or "target"; if UnitIsPlayer(u) then local n,r=UnitName(u); local p=(r and r~="") and n.."-"..r or n; C_PartyInfo.InviteUnit(p); C_PartyInfo.RequestInviteFromUnit(p); end' },
-	{ name = "Sell every grey in your bags", icon = ITEM, why = "Walks all five bags and sells anything whose link carries the grey colour code, so it can only ever touch junk. The vendor window has to be open. The bag functions were moved into C_Container on newer clients, so it asks there first and falls back to the old globals.",
+	{ name = "Sell every gray in your bags", icon = ITEM, why = "Walks all five bags and sells anything whose link carries the gray color code, so it can only ever touch junk. The vendor window has to be open. The bag functions were moved into C_Container on newer clients, so it asks there first and falls back to the old globals.",
 	  text = '/run local c=C_Container or _G for b=0,4 do for s=1,c.GetContainerNumSlots(b) do local l=c.GetContainerItemLink(b,s) if l and l:find("ff9d9d9d") then c.UseContainerItem(b,s) end end end' },
 	{ name = "Repair everything", icon = SWORD, why = "At any vendor who repairs. There is no slash command for this one, which is the only reason it needs a script.",
 	  text = "/run RepairAllItems()" },

@@ -28,7 +28,7 @@ The left panel is laid out like the spellbook and borrows its tab art when the c
 - **My macros** is everything you have kept here, followed by every macro in the game's own macro slots. Click one to put it on the bench. The red X forgets a draft; your macro slots are never touched by it.
 - **Parts** is what a macro is built from, drawn as the blocks they become and flowing across the page. A block that cannot be used yet is dimmed: a condition needs a line to belong to, so before anything is on the bench only the actions can start one: the actions (casting, using, targeting, stopping, pet orders, gear, chat, script) and the condition blocks (Modifier, Target filter, My state, Otherwise). Drag one onto the chain, or click it to add it.
 - **General**, then **Scripts**, then a chapter **per class** with your own class first, are whole macros to start from. Each says what it is for, and every one of them passes the check with nothing to report.
-- **Scripts** holds the macros that are a single line of Lua, because a script is the only way to do what they do: get out of an instance, sell your greys at a vendor, repair, hide the interface for a screenshot, take a summon or a resurrection, reset your instances, hand leadership over.
+- **Scripts** holds the macros that are a single line of Lua, because a script is the only way to do what they do: get out of an instance, sell your grays at a vendor, repair, hide the interface for a screenshot, take a summon or a resurrection, reset your instances, hand leadership over.
 - **Search** looks through every chapter and every block at once, by name, by what the macro does, or by the text inside it.
 
 ## The bench
@@ -79,6 +79,10 @@ None of this is Macro Bench being careful; it is the game.
 - **One cast per press.** Two `/cast` lines with nothing to tell them apart will only ever fire the first, which is what the check says. Two `/use` lines are different and are left alone.
 - **No automation.** A macro cannot decide for you, and a script cannot cast for you in combat. Anything built here could have been typed by hand into the game's own macro window; the point is that it is built quickly and checked before it costs you a pull.
 
+## Settings and look
+
+The cog beside the **?** at the top of the bench opens a small Settings window: a tick box for the minimap button, and a **Look** section. **Window style** picks how the windows are drawn: **Automatic** (EllesmereUI's look when EllesmereUI is installed, otherwise Blizzard), **Blizzard** (the game's own art) or **Dark** (a flat dark look drawn by the addon, no other addon needed). The **Dark background opacity** slider under it sets how solid Dark's windows are. Leaving a drawn look for another one takes a `/reload`, and the addon offers one. Every window's X closes it in combat too.
+
 ## Commands
 
 | Command | What it does |
@@ -91,6 +95,7 @@ None of this is Macro Bench being careful; it is the game.
 | `/macrobench scan` | check every macro you have and list the broken ones |
 | `/macrobench confirm` | ask, or stop asking, before a macro slot is replaced |
 | `/macrobench minimap` | show or hide the minimap button |
+| `/macrobench style` | `auto`, `blizzard` or `dark`: the look of the windows; on its own it moves to the next one |
 | `/macrobench pets` | what your pets have been seen to know (`pets forget` starts it over) |
 | `/macrobench debug` | what this client allowed |
 

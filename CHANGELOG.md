@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.11.0 - 2026-10-10
+
+- The windows can wear a different look. The Settings window behind the cog has a Look section with a Window style button: Automatic, Blizzard or Dark. Blizzard is the game's own art, as it has always been. Dark is a flat dark look the addon draws itself, with no other addon needed, and the "Dark background opacity" slider under the button sets how much of the world shows through it, from 0 to 100 percent; it is grayed out unless Dark is the style. Automatic is EllesmereUI's look when EllesmereUI is installed, and Blizzard otherwise. "/macrobench style auto", "blizzard" or "dark" does the same from chat, and plain "/macrobench style" moves on to the next one.
+- Every window takes the look: the bench with its panels, book tabs, blocks, lines, check boxes, text boxes and buttons, the text and check windows, the icon picker, the tutorials and the Settings window itself.
+- EllesmereUI support. With EllesmereUI running, Automatic draws Macro Bench through EllesmereUI's own skinning, so the bench looks like the rest of your interface instead of standing apart from it. Switching Macro Bench off in EllesmereUI, or choosing Blizzard here, leaves the game's art alone.
+- Going from Blizzard to another look is drawn at once. Any other change takes a reload of the interface, since the old art is faded out rather than kept; the addon says so and offers a Reload now button, and until then the windows keep the look they have.
+- The close buttons work in combat. The game's own X refuses to close an addon's window during a fight ("Interface action blocked"), so the bench, the text and check windows, the icon picker, the tutorials and Settings now close themselves when their X is clicked, fight or no fight.
+- The small X that takes out a line, a step or a kept macro could be clicked but not seen: the art it wore is not drawn on this client. It wears the red X off the game's own close buttons now, and a plain red x where even that is missing.
+- The minimap button stays where a button collector puts it. EllesmereUI's minimap bar, for one, gathers buttons up, and Macro Bench used to pull its own back to the rim of the minimap.
+- A chapter of script macros, between General and the classes: thirteen whole macros that are a single line of Lua, because a script is the only way to do what they do. Getting out of an instance, inviting or asking to join whoever you point at, selling your grays at a vendor, repairing, hiding the interface for a screenshot, silencing the red error text, taking a summon or a resurrection, releasing your spirit, resetting your instances, handing leadership over and turning a party into a raid. Search finds them as well.
+- Spelled the American way throughout: gray and color.
+
 ## 1.10.0 - 2026-10-02
 
 - The minimap button can be switched off from a tick box. There is a cog next to the question mark at the top of the bench, and it opens a small Settings window with "Show the minimap button" in it. Until now the only way to hide the button was "/macrobench minimap", which is not somewhere anyone would think to look. The command still works, and the box keeps up with it.

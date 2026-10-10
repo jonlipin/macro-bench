@@ -230,6 +230,7 @@ local function Button(parent, text, width)
 	local b = TryCreateFrame("Button", nil, parent, { { "UIPanelButtonTemplate" }, { "GameMenuButtonTemplate" } })
 	b:SetSize(width or 100, 22)
 	if b.SetText then b:SetText(text) end
+	if ns.SkinButton then ns.SkinButton(b) end
 	return b
 end
 
@@ -309,7 +310,9 @@ function Tut:Build()
 		end
 		local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", -4, -4)
+		f.mbClose = close
 	end
+	ns.CloseByHiding(f)
 	local body = CreateFrame("Frame", nil, f)
 	if f.Inset then
 		body:SetPoint("TOPLEFT", f.Inset, "TOPLEFT", 6, -6)
@@ -352,6 +355,7 @@ function Tut:Build()
 		b.why:SetMaxLines(2)
 		b.id = lesson.id
 		b:SetScript("OnClick", function(self2) Tut:Start(self2.id) end)
+		if ns.SkinTile then ns.SkinTile(b) end
 		pick.buttons[#pick.buttons + 1] = b
 		y = y - 50
 	end
@@ -406,6 +410,7 @@ function Tut:Build()
 	end)
 
 	f:HookScript("OnHide", function() if Tut.glow then Tut.glow:Hide() end end)
+	if ns.SkinWindow then ns.SkinWindow(f) end
 	f:Hide()
 	tinsert(UISpecialFrames, "MacroBenchTutorialFrame")
 	self.frame = f

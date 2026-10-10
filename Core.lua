@@ -11,7 +11,7 @@
 -- reported as "cannot tell" rather than as "you do not know it".
 
 local ADDON, ns = ...
-ns.VERSION = "1.10.0"
+ns.VERSION = "1.11.0"
 ns.report = {}
 ns.QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 ns.MACRO_LIMIT = 255
@@ -58,6 +58,18 @@ end
 ns.Clean = Clean
 
 function ns.YesNo(v) return v and "|cff40ff40yes|r" or "|cffff5050no|r" end
+
+-- A window's close X. The game's own X calls HideUIPanel, which the client refuses in combat for an
+-- addon's window ("Interface action blocked"), so the X hides the window itself. Its OnHide still runs.
+-- Without a button given it finds the window's own: the template's, or the one the addon added.
+function ns.CloseByHiding(win, button)
+	if type(button) ~= "table" then
+		local name = win.GetName and win:GetName()
+		button = win.CloseButton or (name and _G[name .. "CloseButton"]) or win.mbClose
+	end
+	if type(button) ~= "table" or not button.SetScript then return end
+	button:SetScript("OnClick", function() win:Hide() end)
+end
 
 -- ------------------------------------------------------------------
 -- Spells and items
@@ -534,6 +546,9 @@ local DEFAULTS = {
 	minimapAngle = 200,
 	plainBook = false,
 	confirmOverwrite = true,
+	-- The window style (Styles.lua): "auto", "blizzard" or "dark", and how solid Dark's windows are.
+	style = "auto",
+	darkAlpha = 0.92,
 }
 
 function ns.InitDB()
@@ -1002,6 +1017,7 @@ local function Usage()
 	Print("  |cffffd100/macrobench pets|r what your pets know, for finishing names; |cffffd100pets forget|r starts it over")
 	Print("  |cffffd100/macrobench confirm|r ask, or stop asking, before a macro slot is replaced")
 	Print("  |cffffd100/macrobench minimap|r show or hide the minimap button")
+	Print("  |cffffd100/macrobench style|r |cffffd100auto|r, |cffffd100blizzard|r or |cffffd100dark|r: the look of the windows")
 	Print("  |cffffd100/macrobench debug|r what this client allowed")
 end
 
@@ -1063,6 +1079,15 @@ local function Command(input)
 		-- one that changed it.
 		if ns.UI.RefreshSettings then ns.UI:RefreshSettings() end
 		Print("Minimap button: " .. ns.YesNo(ns.db.minimap))
+	elseif cmd == "style" then
+		local Styles = ns.Styles
+		local word = strlower(rest or "")
+		if word == "auto" or word == "automatic" then Styles.Set("auto")
+		elseif word == "blizzard" or word == "dark" then Styles.Set(word)
+		elseif word == "" then Styles.Cycle(1)
+		else Print("Styles: auto, blizzard, dark.") return end
+		if ns.UI.RefreshSettings then ns.UI:RefreshSettings() end
+		Print("Window style: " .. Styles.Name(ns.db.style) .. ". " .. Styles.Note())
 	elseif cmd == "debug" and rest == "spells" then
 		Print("what this client has for reading the spellbook:")
 		for _, line in ipairs(ns.SpellApiReport()) do Print("  " .. line) end

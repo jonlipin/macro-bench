@@ -15,7 +15,7 @@ function blockDecls(body) {
   return at;
 }
 
-function analyse(file) {
+function analyze(file) {
   const ast = luaparse.parse(fs.readFileSync(file, 'utf8'), { luaVersion: '5.1', locations: true });
   const found = [];
   const scopes = [];
@@ -69,7 +69,7 @@ function analyse(file) {
 
 let bad = 0;
 for (const file of process.argv.slice(2)) {
-  const found = analyse(file);
+  const found = analyze(file);
   bad += found.length;
   console.log(`${found.length ? 'EARLY' : 'ok   '}${require('path').basename(file).padEnd(14)} ${found.length} used before declared`);
   found.forEach(f => console.log(`        line ${f.line}: '${f.name}' is a global here; its local is declared on line ${f.declared}`));

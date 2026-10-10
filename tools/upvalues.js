@@ -5,7 +5,7 @@ const luaparse = require('luaparse');
 const fs = require('fs');
 const LIMIT = 60;
 
-function analyse(file) {
+function analyze(file) {
   const ast = luaparse.parse(fs.readFileSync(file, 'utf8'), { luaVersion: '5.1', locations: true });
   const funcs = [];
   const scopes = [{ vars: new Set(), fn: null }];
@@ -71,7 +71,7 @@ function analyse(file) {
 
 let bad = 0;
 for (const file of process.argv.slice(2)) {
-  const funcs = analyse(file).sort((a, b) => b.upvalues.size - a.upvalues.size);
+  const funcs = analyze(file).sort((a, b) => b.upvalues.size - a.upvalues.size);
   const worst = funcs.slice(0, 3).map(f => `${f.name}@${f.line}=${f.upvalues.size}`).join('  ');
   const over = funcs.filter(f => f.upvalues.size > LIMIT);
   bad += over.length;

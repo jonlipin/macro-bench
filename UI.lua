@@ -90,6 +90,8 @@ local function MakeButton(parent, text, width, tip)
 		b:SetScript("OnEnter", function(self) TextTooltip(self, text, tip) end)
 		b:SetScript("OnLeave", HideTooltip)
 	end
+	-- The window style (MacroBench_Skins.lua), which draws nothing with the Blizzard look.
+	if ns.SkinButton then ns.SkinButton(b) end
 	return b
 end
 
@@ -111,7 +113,39 @@ local function CreateCheck(parent)
 		cb:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
 		ns.report["check button"] = "bare"
 	end
+	if ns.SkinCheck then ns.SkinCheck(cb) end
 	return cb
+end
+
+local function InputBox(parent)
+	local box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+	if ns.SkinEditBox then ns.SkinEditBox(box) end
+	return box
+end
+
+-- The small X that takes out a line, a step or a kept macro. It wears the red X off the game's own
+-- close buttons, which this client certainly draws: the minimize button art these used to wear is
+-- not drawn here at all, so the buttons were there to be clicked but not to be seen. Should even
+-- that art be missing, a plain red x.
+local function TakeOutButton(parent, size)
+	local b = CreateFrame("Button", nil, parent)
+	b:SetSize(size, size)
+	if b.SetNormalAtlas and HasAtlas("RedButton-Exit") then
+		b:SetNormalAtlas("RedButton-Exit")
+		if b.SetPushedAtlas and HasAtlas("RedButton-exit-pressed") then b:SetPushedAtlas("RedButton-exit-pressed") end
+		if b.SetHighlightAtlas and HasAtlas("RedButton-Highlight") then b:SetHighlightAtlas("RedButton-Highlight", "ADD") end
+		ns.report["take out buttons"] = "RedButton-Exit"
+	else
+		b.mark = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		b.mark:SetPoint("CENTER", 0, 1)
+		b.mark:SetText("x")
+		b.mark:SetTextColor(1, 0.3, 0.25)
+		local hl = b:CreateTexture(nil, "HIGHLIGHT")
+		hl:SetAllPoints()
+		hl:SetColorTexture(1, 1, 1, 0.15)
+		ns.report["take out buttons"] = "a plain x"
+	end
+	return b
 end
 
 local function OneLine(fs)
@@ -166,17 +200,19 @@ local function Pane(parent, title, left, right, top, height, bottom)
 	else p:SetPoint("BOTTOM", parent, "BOTTOM", 0, bottom or 2) end
 	if left then p:SetPoint("LEFT", parent, "LEFT", left, 0) else p:SetPoint("LEFT", parent, "LEFT", 2, 0) end
 	if right then p:SetPoint("RIGHT", parent, "LEFT", right, 0) else p:SetPoint("RIGHT", parent, "RIGHT", -2, 0) end
-	Plate(p, 0, 0, 0, 0.42)
+	p.plate = Plate(p, 0, 0, 0, 0.42)
 	local strip = p:CreateTexture(nil, "BACKGROUND", nil, 2)
 	strip:SetPoint("TOPLEFT")
 	strip:SetPoint("TOPRIGHT")
 	strip:SetHeight(20)
 	strip:SetColorTexture(0.12, 0.09, 0.03, 0.9)
+	p.strip = strip
 	p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	p.title:SetPoint("TOPLEFT", 8, -4)
 	p.title:SetText(title)
 	p.note = p:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	p.note:SetPoint("TOPRIGHT", -8, -5)
+	if ns.SkinPanel then ns.SkinPanel(p) end
 	return p
 end
 
@@ -402,6 +438,8 @@ local function CreateBookTab(holder, pane, token, index)
 	icon:SetPoint("TOP", 0, -4)
 	icon:SetSize(TAB_W - 12, TAB_W - 12)
 	icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	-- Under the name the game's own icon tabs use, which is the one region a restyled tab keeps.
+	tab.Icon = icon
 	local classToken = token
 	if token == "CLASSES" then classToken = select(2, UnitClass("player")) end
 	if token == "MINE" then icon:SetTexture(ns.SafeIcon("INV_Misc_Note_01"))
@@ -472,6 +510,7 @@ function UI:SyncTabs()
 		if tab.glow then tab.glow:SetShown(on) end
 		if tab.outline then tab.outline:Set(on and 1 or 0.45, on and 0.82 or 0.4, on and 0.1 or 0.33, 1) end
 		tab:SetAlpha(on and 1 or 0.7)
+		if ns.SkinTabSelected then ns.SkinTabSelected(tab, on) end
 	end
 end
 
@@ -492,6 +531,7 @@ local function Ghost()
 	ghost.text:SetPoint("LEFT", ghost.icon, "RIGHT", 4, 0)
 	ghost.text:SetPoint("RIGHT", -4, 0)
 	ghost.text:SetJustifyH("LEFT")
+	if ns.SkinTile then ns.SkinTile(ghost) end
 	ghost:Hide()
 	ghost:SetScript("OnUpdate", function() UI:DragUpdate() end)
 	return ghost
@@ -764,6 +804,7 @@ local function CreatePartFrame(parent)
 	p.valueText = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	p.valueText:SetJustifyH("LEFT")
 	OneLine(p.valueText)
+	if ns.SkinTile then ns.SkinTile(p) end
 	return p
 end
 
@@ -934,6 +975,7 @@ function UI:LayoutParts()
 		if not head then
 			head = partsContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 			head:SetTextColor(1, 0.82, 0)
+			if ns.SkinText then ns.SkinText(head) end
 			palHeads[usedHeads] = head
 		end
 		head:ClearAllPoints()
@@ -1027,12 +1069,8 @@ local function CreatePlate(parent)
 	plate.mark = plate:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	plate.mark:SetPoint("TOPLEFT", 20, -6)
 	-- Under the line number, so a whole line can go without hunting for the right block first.
-	plate.del = CreateFrame("Button", nil, plate)
-	plate.del:SetSize(16, 16)
+	plate.del = TakeOutButton(plate, 16)
 	plate.del:SetPoint("TOPLEFT", 5, -22)
-	plate.del:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-	plate.del:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-	plate.del:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 	plate.del:SetScript("OnClick", function(self)
 		UI:RemoveBlock(self:GetParent().blockIndex)
 	end)
@@ -1050,6 +1088,7 @@ local function CreatePlate(parent)
 	plate:EnableMouse(true)
 	plate:SetScript("OnReceiveDrag", function(self) UI:DropOnLine(self.blockIndex) end)
 	plate:SetScript("OnMouseUp", function(self) UI:DropOnLine(self.blockIndex) end)
+	if ns.SkinTile then ns.SkinTile(plate) end
 	return plate
 end
 
@@ -1126,6 +1165,7 @@ function UI:RefreshChain()
 					-- On a frame above the line plates: a plate is a frame of its own, and its
 					-- background would otherwise draw over a word written on the content.
 					link = linkHost:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+					if ns.SkinText then ns.SkinText(link) end
 					links[usedLinks] = link
 				end
 				link:SetText(word == "›" and "|cff8a8a8a›|r" or ("|cff7a7a7a" .. word .. "|r"))
@@ -1316,6 +1356,7 @@ local function TriButton(parent, term, label, width)
 			self.bg:SetColorTexture(0.09, 0.09, 0.09, 0.85)
 		end
 	end
+	if ns.SkinTile then ns.SkinTile(b) end
 	return b
 end
 
@@ -1358,8 +1399,9 @@ local function ValueRow(parent, def, x, y, width)
 	state.text = state:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	state.text:SetAllPoints()
 	row.state = state
+	if ns.SkinTile then ns.SkinTile(state) end
 
-	row.box = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+	row.box = InputBox(row)
 	row.box:SetSize(max(70, width - 190), 20)
 	row.box:SetPoint("LEFT", state, "RIGHT", 10, 0)
 	row.box:SetAutoFocus(false)
@@ -1452,7 +1494,7 @@ local function UnitRow(parent, y, width)
 	row.nameLabel = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	row.nameLabel:SetPoint("TOPLEFT", 2, -50)
 	row.nameLabel:SetText("or somebody by name")
-	row.name = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+	row.name = InputBox(row)
 	row.name:SetSize(160, 20)
 	row.name:SetPoint("LEFT", row.nameLabel, "RIGHT", 14, 0)
 	row.name:SetAutoFocus(false)
@@ -1490,7 +1532,7 @@ local function RawRow(parent, y, width, bucket)
 	row.label = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	row.label:SetPoint("TOPLEFT", 0, 0)
 	row.label:SetText("All of this block, as the game reads it")
-	row.box = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+	row.box = InputBox(row)
 	row.box:SetSize(max(120, width - 40), 20)
 	row.box:SetPoint("TOPLEFT", 6, -16)
 	row.box:SetAutoFocus(false)
@@ -1531,7 +1573,7 @@ local function CreateEditors(host, scroll)
 	local typedLabel = action:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	typedLabel:SetPoint("TOPLEFT", 0, -74)
 	typedLabel:SetText("or any other command:  /")
-	local typed = CreateFrame("EditBox", nil, action, "InputBoxTemplate")
+	local typed = InputBox(action)
 	typed:SetSize(150, 20)
 	typed:SetPoint("LEFT", typedLabel, "RIGHT", 10, 0)
 	typed:SetAutoFocus(false)
@@ -1551,6 +1593,8 @@ local function CreateEditors(host, scroll)
 				button:SetNormalFontObject(on and "GameFontNormalSmall" or "GameFontHighlightSmall")
 			end
 			button:SetAlpha(on and 1 or 0.75)
+			-- A new font object brings Blizzard's font back, so a drawn style puts its own back.
+			if ns.SkinCommandButton then ns.SkinCommandButton(button, on) end
 		end
 		if not self.typed:HasFocus() then self.typed:SetText((current and not G.Def(current)) and current or "") end
 	end
@@ -1635,7 +1679,7 @@ local function CreateEditors(host, scroll)
 	-- ---- the argument -----------------------------------------------
 	local arg = CreateFrame("Frame", nil, host)
 	Place(arg, 210)
-	local argBox = CreateFrame("EditBox", nil, arg, "InputBoxTemplate")
+	local argBox = InputBox(arg)
 	argBox:SetSize(420, 20)
 	argBox:SetPoint("TOPLEFT", 6, 0)
 	argBox:SetAutoFocus(false)
@@ -1716,6 +1760,7 @@ local function CreateEditors(host, scroll)
 		GameTooltip:Show()
 	end)
 	match:SetScript("OnLeave", HideTooltip)
+	if ns.SkinTile then ns.SkinTile(match) end
 	arg.match = match
 
 	local note = arg:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -1746,6 +1791,7 @@ local function CreateEditors(host, scroll)
 		row.text:SetJustifyH("LEFT")
 		OneLine(row.text)
 		row:SetScript("OnClick", function(self) UI:AcceptSuggestion(self.value) end)
+		if ns.SkinTile then ns.SkinTile(row) end
 		row:Hide()
 		arg.suggestions[i] = row
 	end
@@ -1961,7 +2007,7 @@ local function CreateEditors(host, scroll)
 	local secondsLabel = steps:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	secondsLabel:SetPoint("TOPLEFT", 520, 20)
 	secondsLabel:SetText("or after")
-	steps.seconds = CreateFrame("EditBox", nil, steps, "InputBoxTemplate")
+	steps.seconds = InputBox(steps)
 	steps.seconds:SetSize(44, 20)
 	steps.seconds:SetPoint("LEFT", secondsLabel, "RIGHT", 12, 0)
 	steps.seconds:SetAutoFocus(false)
@@ -1990,7 +2036,7 @@ local function CreateEditors(host, scroll)
 		row.number:SetPoint("LEFT", 0, 0)
 		row.number:SetWidth(20)
 		row.number:SetJustifyH("RIGHT")
-		row.box = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+		row.box = InputBox(row)
 		row.box:SetSize(360, 20)
 		row.box:SetPoint("LEFT", row.number, "RIGHT", 12, 0)
 		row.box:SetAutoFocus(false)
@@ -2029,12 +2075,8 @@ local function CreateEditors(host, scroll)
 				WriteSteps(reset, list)
 			end
 		end)
-		row.del = CreateFrame("Button", nil, row)
-		row.del:SetSize(18, 18)
+		row.del = TakeOutButton(row, 18)
 		row.del:SetPoint("LEFT", row.down, "RIGHT", 6, 0)
-		row.del:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-		row.del:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-		row.del:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 		row.del:SetScript("OnClick", function()
 			local reset, list = Working()
 			table.remove(list, index)
@@ -2044,6 +2086,7 @@ local function CreateEditors(host, scroll)
 		end)
 		row.del:SetScript("OnEnter", function(self) TextTooltip(self, "Take this step out") end)
 		row.del:SetScript("OnLeave", HideTooltip)
+		if ns.SkinTile then ns.SkinTile(row) end
 		steps.rows[index] = row
 		return row
 	end
@@ -2082,6 +2125,7 @@ local function CreateEditors(host, scroll)
 		row.text:SetJustifyH("LEFT")
 		OneLine(row.text)
 		row:SetScript("OnClick", function(self) steps:Accept(self.value) end)
+		if ns.SkinTile then ns.SkinTile(row) end
 		row:Hide()
 		steps.suggestions[i] = row
 	end
@@ -2362,11 +2406,8 @@ local function CreateBookRow(parent)
 	row.heading = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	row.heading:SetPoint("BOTTOMLEFT", 8, 3)
 	row.heading:SetTextColor(1, 0.82, 0)
-	row.del = CreateFrame("Button", nil, row)
-	row.del:SetSize(16, 16)
+	row.del = TakeOutButton(row, 16)
 	row.del:SetPoint("TOPRIGHT", -4, -4)
-	row.del:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-	row.del:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
 	row.del:Hide()
 	row:RegisterForDrag("LeftButton")
 	row:SetScript("OnDragStart", function(self)
@@ -2381,6 +2422,7 @@ local function CreateBookRow(parent)
 		end
 	end)
 	row:SetScript("OnDragStop", function() UI:EndDrag() end)
+	if ns.SkinTile then ns.SkinTile(row) end
 	return row
 end
 
@@ -2586,6 +2628,7 @@ local function CreateCheckRow(parent)
 	row.text:SetJustifyV("TOP")
 	if row.text.SetWordWrap then row.text:SetWordWrap(true) end
 	row:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+	if ns.SkinTile then ns.SkinTile(row) end
 	return row
 end
 
@@ -2990,7 +3033,9 @@ local function BuildFrame()
 		end
 		local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", -4, -4)
+		frame.mbClose = close
 	end
+	ns.CloseByHiding(frame)
 
 	-- Up beside the close button, where a question mark belongs.
 	local help, plate = TitleBarButton(frame)
@@ -3022,6 +3067,7 @@ local function BuildFrame()
 	gear:SetSize(15, 15)
 	gear:SetPoint("CENTER")
 	gear:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+	cog.gear = gear
 	cog:SetScript("OnClick", function() UI:ToggleSettings() end)
 	cog:SetScript("OnEnter", function(self)
 		TextTooltip(self, "Settings", "The minimap button, and anything else that is about the addon rather than about one macro.")
@@ -3048,7 +3094,7 @@ local function BuildBook()
 	local searchLabel = bookPane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	searchLabel:SetPoint("TOPLEFT", 8, -26)
 	searchLabel:SetText("Search")
-	local searchBox = CreateFrame("EditBox", nil, bookPane, "InputBoxTemplate")
+	local searchBox = InputBox(bookPane)
 	searchBox:SetSize(BOOK_W - 86, 20)
 	searchBox:SetPoint("TOPLEFT", searchLabel, "TOPRIGHT", 14, 4)
 	searchBox:SetAutoFocus(false)
@@ -3096,6 +3142,7 @@ local function BuildBook()
 			TextTooltip(self, T.Label(self.token), format("%d macros to start from.", #(T[self.token] or {})))
 		end)
 		b:SetScript("OnLeave", HideTooltip)
+		if ns.SkinTile then ns.SkinTile(b) end
 		b:Hide()
 		classButtons[#classButtons + 1] = b
 	end
@@ -3299,7 +3346,9 @@ local function CreateWindow(globalName, title, w, h)
 		end
 		local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", -4, -4)
+		f.mbClose = close
 	end
+	ns.CloseByHiding(f)
 	f.body = CreateFrame("Frame", nil, f)
 	if f.Inset then
 		f.body:SetPoint("TOPLEFT", f.Inset, "TOPLEFT", 4, -4)
@@ -3334,7 +3383,8 @@ local function BuildTextAndCheck()
 	textBg:SetPoint("TOPLEFT", textScroll, "TOPLEFT", -4, 4)
 	textBg:SetPoint("BOTTOMRIGHT", textScroll, "BOTTOMRIGHT", 4, -4)
 	textBg:SetFrameLevel(max(0, textScroll:GetFrameLevel() - 1))
-	Plate(textBg, 0, 0, 0, 0.6)
+	textBg.plate = Plate(textBg, 0, 0, 0, 0.6)
+	if ns.SkinPanel then ns.SkinPanel(textBg, true) end
 
 	textBox = CreateFrame("EditBox", nil, textScroll)
 	textBox:SetMultiLine(true)
@@ -3367,6 +3417,10 @@ local function BuildTextAndCheck()
 	checkList = CreateList(checkWindow.body, CheckRowHeight, CreateCheckRow, UpdateCheckRow)
 	checkList.frame:SetPoint("TOPLEFT", checkWindow.body, "TOPLEFT", 4, -20)
 	checkList.frame:SetPoint("BOTTOMRIGHT", checkWindow.body, "BOTTOMRIGHT", -8, 4)
+	if ns.SkinWindow then
+		ns.SkinWindow(textWindow)
+		ns.SkinWindow(checkWindow)
+	end
 end
 
 -- Opening one of them puts it beside the bench the first time, and where you left it after that.
@@ -3402,7 +3456,7 @@ local function BuildIconPicker()
 		p:Hide()
 	end)
 
-	local searchBox = CreateFrame("EditBox", nil, body, "InputBoxTemplate")
+	local searchBox = InputBox(body)
 	searchBox:SetSize(200, 20)
 	searchBox:SetPoint("LEFT", auto, "RIGHT", 16, 0)
 	searchBox:SetAutoFocus(false)
@@ -3448,6 +3502,7 @@ local function BuildIconPicker()
 			TextTooltip(self, self.label or "This icon", "Click to give the macro this icon.")
 		end)
 		b:SetScript("OnLeave", HideTooltip)
+		if ns.SkinTile then ns.SkinTile(b) end
 		p.buttons[i] = b
 	end
 
@@ -3494,6 +3549,7 @@ local function BuildIconPicker()
 			self.total > 0 and self.offset + 1 or 0, min(self.offset + per, self.total), self.total))
 	end
 
+	if ns.SkinWindow then ns.SkinWindow(p) end
 	iconPicker = p
 	return p
 end
@@ -3521,7 +3577,7 @@ end
 -- nowhere to be switched off except a chat command, which is not somewhere anyone looks.
 -- ------------------------------------------------------------------
 local function BuildSettings()
-	local w = CreateWindow("MacroBenchSettingsFrame", "Settings", 300, 116)
+	local w = CreateWindow("MacroBenchSettingsFrame", "Settings", 320, 270)
 
 	local intro = w.body:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	intro:SetPoint("TOPLEFT", 4, -4)
@@ -3549,6 +3605,109 @@ local function BuildSettings()
 	end)
 	minimapCheck:SetScript("OnLeave", HideTooltip)
 
+	-- ---- Look: the window style (Styles.lua) --------------------------
+	local Styles = ns.Styles
+	local head = w.body:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	head:SetPoint("TOPLEFT", minimapCheck, "BOTTOMLEFT", 0, -14)
+	head:SetText("Look")
+
+	local styleButton = MakeButton(w.body, "Window style", 240)
+	styleButton:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 2, -8)
+	styleButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	styleButton:SetScript("OnClick", function(_, mouse)
+		Styles.Cycle(mouse == "RightButton" and -1 or 1)
+		UI:RefreshSettings()
+	end)
+	styleButton:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:AddLine("Window style", 1, 0.82, 0)
+		for _, line in ipairs(Styles.HELP) do GameTooltip:AddLine(line, 1, 1, 1, true) end
+		GameTooltip:AddLine("Left-click for the next style, right-click for the previous one.", 0.6, 0.6, 0.6, true)
+		GameTooltip:Show()
+	end)
+	styleButton:SetScript("OnLeave", HideTooltip)
+
+	-- Two lines, for "Type /reload to switch to ..." with what is in use until then.
+	local note = w.body:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	note:SetPoint("TOPLEFT", styleButton, "BOTTOMLEFT", 0, -6)
+	note:SetSize(290, 24)
+	note:SetJustifyH("LEFT")
+	note:SetJustifyV("TOP")
+	if note.SetWordWrap then note:SetWordWrap(true) end
+
+	-- label ................ value
+	-- [=========o==============]
+	local sliderLabel = w.body:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	sliderLabel:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -8)
+	sliderLabel:SetText("Dark background opacity")
+	local sliderValue = w.body:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local opacity = TryCreateFrame("Slider", nil, w.body, {
+		{ "MinimalSliderTemplate", function(s) return s.SetMinMaxValues ~= nil end },
+		{ "UISliderTemplate", function(s) return s.SetMinMaxValues ~= nil end },
+		{ "OptionsSliderTemplate", function(s) return s.SetMinMaxValues ~= nil end },
+	})
+	-- OptionsSliderTemplate carries captions of its own; these are written above it instead.
+	for _, key in ipairs({ "Low", "High", "Text" }) do
+		if type(opacity[key]) == "table" and opacity[key].SetText then opacity[key]:SetText("") end
+	end
+	if not opacity.GetThumbTexture or not opacity:GetThumbTexture() then
+		-- No template: a track and a thumb in plain color, which every client draws.
+		if opacity.SetOrientation then opacity:SetOrientation("HORIZONTAL") end
+		local track = opacity:CreateTexture(nil, "BACKGROUND")
+		track:SetPoint("LEFT")
+		track:SetPoint("RIGHT")
+		track:SetHeight(6)
+		track:SetColorTexture(0, 0, 0, 0.6)
+		local thumb = opacity:CreateTexture(nil, "OVERLAY")
+		thumb:SetSize(8, 16)
+		thumb:SetColorTexture(1, 0.82, 0, 1)
+		opacity:SetThumbTexture(thumb)
+	end
+	opacity:SetPoint("TOPLEFT", sliderLabel, "BOTTOMLEFT", 2, -8)
+	opacity:SetSize(270, 16)
+	sliderValue:SetPoint("BOTTOMRIGHT", opacity, "TOPRIGHT", 0, 8)
+	opacity:SetMinMaxValues(0, 100)
+	opacity:SetValueStep(5)
+	if opacity.SetObeyStepOnDrag then opacity:SetObeyStepOnDrag(true) end
+	local syncing = false
+	opacity:SetScript("OnValueChanged", function(_, v)
+		if syncing then return end
+		v = max(0, min(100, floor(v / 5 + 0.5) * 5))
+		sliderValue:SetText(v .. "%")
+		if v ~= floor(ns.db.darkAlpha * 100 + 0.5) then
+			ns.db.darkAlpha = v / 100
+			Styles.SetDarkAlpha(ns.db.darkAlpha)
+		end
+	end)
+	opacity:SetScript("OnEnter", function(self)
+		TextTooltip(self, "Dark background opacity", "How much of the world shows through the Dark style's windows.",
+			ns.db.style ~= "dark" and "|cffffd100Applies to the Dark style only.|r" or nil)
+	end)
+	opacity:SetScript("OnLeave", HideTooltip)
+	opacity.mbLabel, opacity.mbValue = sliderLabel, sliderValue
+
+	-- The button, the note and the slider, put in step with the settings.
+	function w.ShowStyle()
+		styleButton:SetText("Window style: " .. Styles.Name(ns.db.style))
+		note:SetText(Styles.Note())
+		local dark = ns.db.style == "dark"
+		syncing = true
+		opacity:SetValue(floor(ns.db.darkAlpha * 100 + 0.5))
+		syncing = false
+		sliderValue:SetText(floor(ns.db.darkAlpha * 100 + 0.5) .. "%")
+		if opacity.SetEnabled then opacity:SetEnabled(dark) elseif dark then opacity:Enable() else opacity:Disable() end
+		opacity:SetAlpha(dark and 1 or 0.5)
+		sliderLabel:SetFontObject(dark and "GameFontHighlight" or "GameFontDisable")
+		sliderValue:SetFontObject(dark and "GameFontNormal" or "GameFontDisable")
+		-- A font object brings Blizzard's font back, so a drawn style puts its own back.
+		if Styles.S then
+			Styles.S.Font(sliderLabel)
+			Styles.S.Font(sliderValue)
+		end
+	end
+	w.styleButton, w.styleNote, w.opacity = styleButton, note, opacity
+
+	if ns.SkinWindow then ns.SkinWindow(w) end
 	settingsWindow = w
 	return w
 end
@@ -3556,6 +3715,7 @@ end
 -- Called whenever the window opens and after the chat command changes a setting behind its back.
 function UI:RefreshSettings()
 	if minimapCheck then minimapCheck:SetChecked(ns.db.minimap and true or false) end
+	if settingsWindow and settingsWindow.ShowStyle then settingsWindow.ShowStyle() end
 end
 
 function UI:ToggleSettings()
@@ -3586,7 +3746,8 @@ local function BuildFooter()
 	footer:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", BENCH_L, 2)
 	footer:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", -2, 2)
 	footer:SetHeight(38)
-	Plate(footer, 0, 0, 0, 0.42)
+	footer.plate = Plate(footer, 0, 0, 0, 0.42)
+	if ns.SkinPanel then ns.SkinPanel(footer) end
 
 	iconButton = CreateFrame("Button", nil, footer)
 	iconButton:SetSize(28, 28)
@@ -3609,11 +3770,13 @@ local function BuildFooter()
 			UI:ShowIconPicker()
 		end
 	end)
+	-- true: the macro's icon is always there, so it gets the square edge too.
+	if ns.SkinTile then ns.SkinTile(iconButton, true) end
 
 	local nameLabel = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	nameLabel:SetPoint("LEFT", iconButton, "RIGHT", 8, 0)
 	nameLabel:SetText("Name")
-	nameBox = CreateFrame("EditBox", nil, footer, "InputBoxTemplate")
+	nameBox = InputBox(footer)
 	nameBox:SetSize(140, 20)
 	nameBox:SetPoint("LEFT", nameLabel, "RIGHT", 12, 0)
 	nameBox:SetAutoFocus(false)
@@ -3695,6 +3858,7 @@ local function BuildFooter()
 		GameTooltip:Show()
 	end)
 	checkStatus:SetScript("OnLeave", HideTooltip)
+	if ns.SkinTile then ns.SkinTile(checkStatus) end
 	UI.focus.check = checkStatus
 
 end
@@ -3706,6 +3870,7 @@ local function Build()
 	BuildPart()
 	BuildTextAndCheck()
 	BuildFooter()
+	if ns.SkinMainWindow then ns.SkinMainWindow(frame) end
 	local ticker = CreateFrame("Frame", nil, frame)
 	ticker.elapsed = 0
 	ticker:SetScript("OnUpdate", function(self, elapsed)
@@ -3735,6 +3900,9 @@ local function PlaceMinimapButton()
 	if not b or not Minimap then return end
 	local angle = math.rad(ns.db.minimapAngle or 200)
 	local radius = (Minimap:GetWidth() or 140) / 2 + 6
+	-- Only while it sits on the minimap. A button collector (EllesmereUI's, for one) that
+	-- has taken the button keeps it where it put it.
+	if b:GetParent() ~= Minimap then return end
 	b:ClearAllPoints()
 	b:SetPoint("CENTER", Minimap, "CENTER", math.cos(angle) * radius, math.sin(angle) * radius)
 end
